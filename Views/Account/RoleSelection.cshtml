@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Select Account Type";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5 mb-5">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-lg border-0 h-100 transition-hover">
+            <div class="card-body p-5 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-person-fill fs-1"></i>
+                </div>
+                <h3 class="fw-bold mb-3">Customer</h3>
+                <p class="text-secondary mb-4">I am looking for services to fix my home repairs.</p>
+                <a asp-action="RegisterCustomer" class="btn btn-primary rounded-pill px-4 py-2 w-100 fw-bold">Register as Customer</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-lg border-0 h-100 transition-hover">
+            <div class="card-body p-5 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle mb-4" style="width: 80px; height: 80px;">
+                    <i class="bi bi-tools fs-1"></i>
+                </div>
+                <h3 class="fw-bold mb-3">Service Provider</h3>
+                <p class="text-secondary mb-4">I am a skilled professional looking for work opportunities.</p>
+                <a asp-action="RegisterProvider" class="btn btn-outline-dark rounded-pill px-4 py-2 w-100 fw-bold">Register as Provider</a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

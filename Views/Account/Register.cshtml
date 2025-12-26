@@ -1,0 +1,81 @@
+﻿@model FixItNepal.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5 mb-5">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                     <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-plus fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Create Account</h3>
+                    <p class="text-secondary small">Join FixIt Nepal today</p>
+                </div>
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
+                        <div class="input-group">
+                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-secondary"></i></span>
+                            <input asp-for="FullName" class="form-control border-start-0 ps-0 bg-light" placeholder="Full Name" />
+                        </div>
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label text-secondary small fw-bold"></label>
+                        <div class="input-group">
+                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-secondary"></i></span>
+                            <input asp-for="Email" class="form-control border-start-0 ps-0 bg-light" placeholder="name@example.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label text-secondary small fw-bold"></label>
+                         <div class="input-group">
+                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-secondary"></i></span>
+                            <input asp-for="Password" class="form-control border-start-0 ps-0 bg-light" type="password" placeholder="Create password" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label text-secondary small fw-bold"></label>
+                         <div class="input-group">
+                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock-fill text-secondary"></i></span>
+                            <input asp-for="ConfirmPassword" class="form-control border-start-0 ps-0 bg-light" type="password" placeholder="Confirm password" />
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Role" class="form-label text-secondary small fw-bold">I want to</label>
+                        <select asp-for="Role" class="form-select bg-light">
+                            <option value="Customer">Hire a Professional (Customer)</option>
+                            <option value="ServiceProvider">Offer Services (Service Provider)</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2 rounded-3 fw-bold">Create Account</button>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted small mb-0">Already have an account? <a asp-action="Login" class="text-decoration-none fw-bold text-primary">Login here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

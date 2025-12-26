@@ -1,0 +1,117 @@
+@using Microsoft.AspNetCore.Identity
+@using FixItNepal.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - FixItNepal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" />
+    <!-- Google Fonts: Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="bi bi-hammer text-primary fs-4"></i>
+                <span>FixIt Nepal</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        var user = await UserManager.GetUserAsync(User);
+                        if (user != null)
+                        {
+                             if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard">Dashboard</a></li>
+                            }
+                            else if (User.IsInRole("Customer"))
+                            {
+                                <li class="nav-item"><a class="nav-link" href="/Customer/Dashboard">Dashboard</a></li>
+                            }
+                            else if (User.IsInRole("ServiceProvider"))
+                            {
+                                <li class="nav-item"><a class="nav-link" href="/ServiceProvider/Dashboard">Dashboard</a></li>
+                            }
+                            
+                            <!-- Profile Picture -->
+                             <li class="nav-item">
+                                @if (!string.IsNullOrEmpty(user.ProfilePicture))
+                                {
+                                    <img src="~/uploads/profiles/@user.ProfilePicture" alt="Profile" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px; font-weight: 600;">
+                                        @user.FullName?.Substring(0, 1).ToUpper()
+                                    </div>
+                                }
+                            </li>
+
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Logout</button>
+                                </form>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="btn btn-ghost" href="/Account/Login">Login</a></li>
+                        <li class="nav-item"><a class="btn btn-primary rounded-pill px-4" href="/Account/Register">Register</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex-grow-1">
+        @RenderBody()
+    </div>
+
+    <footer class="bg-dark text-white py-5 mt-auto">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-white mb-3"><i class="bi bi-hammer text-primary me-2"></i>FixIt Nepal</h5>
+                    <p class="text-white-50 small">Your trusted partner for home repair and maintenance services across Nepal.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="fw-bold text-white mb-3">Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-white-50 hover-white">About Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-white-50 hover-white">Services</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-white-50 hover-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="fw-bold text-white mb-3">Contact Us</h6>
+                    <p class="text-white-50 small mb-1"><i class="bi bi-geo-alt me-2"></i>Kathmandu, Nepal</p>
+                    <p class="text-white-50 small mb-1"><i class="bi bi-envelope me-2"></i>info@fixitnepal.com</p>
+                    <p class="text-white-50 small"><i class="bi bi-telephone me-2"></i>+977 1234567890</p>
+                </div>
+            </div>
+            <div class="border-top border-secondary mt-4 pt-4 text-center">
+                <p class="small text-white-50 mb-0">&copy; 2025 FixItNepal. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

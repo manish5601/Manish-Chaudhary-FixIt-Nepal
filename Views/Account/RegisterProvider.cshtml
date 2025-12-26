@@ -1,0 +1,121 @@
+@model FixItNepal.ViewModels.ProviderRegistrationViewModel
+@{
+    ViewData["Title"] = "Provider Registration";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5 mb-5">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-5">
+                     <span class="badge bg-primary-subtle text-primary rounded-pill mb-2 px-3">Join Our Network</span>
+                    <h2 class="fw-bold">Join as a Service Provider</h2>
+                    <p class="text-secondary">Start growing your business with FixIt Nepal</p>
+                </div>
+                
+                <form asp-action="RegisterProvider" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-4 text-center">
+                        <label asp-for="ProfileImage" class="form-label d-block fw-bold text-secondary">Profile Picture</label>
+                        <div class="mx-auto mb-2" style="width: 100px; height: 100px; background-color: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px dashed #cbd5e1;">
+                            <i class="bi bi-camera text-secondary fs-3"></i>
+                        </div>
+                        <input asp-for="ProfileImage" class="form-control form-control-sm w-50 mx-auto" type="file" accept="image/*" />
+                        <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="FullName" class="form-control bg-light" placeholder="John Doe" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="Email" class="form-control bg-light" placeholder="name@example.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        
+                         <div class="col-md-6">
+                            <label asp-for="Password" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="Password" class="form-control bg-light" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control bg-light" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                        
+                         <div class="col-md-6">
+                            <label asp-for="Address" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="Address" class="form-control bg-light" placeholder="123 Main St, Kathmandu" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="PhoneNumber" class="form-control bg-light" placeholder="+977-9800000000" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-5 border-secondary-subtle" />
+                    
+                    <h5 class="fw-bold mb-4"><i class="bi bi-briefcase me-2 text-primary"></i>Professional Details</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PrimaryService" class="form-label text-secondary small fw-bold"></label>
+                            <select asp-for="PrimaryService" class="form-select bg-light" asp-items="Html.GetEnumSelectList<FixItNepal.Models.ServiceCategory>()"></select>
+                            <span asp-validation-for="PrimaryService" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ExperienceYears" class="form-label text-secondary small fw-bold"></label>
+                            <div class="input-group">
+                                <input asp-for="ExperienceYears" class="form-control bg-light" />
+                                <span class="input-group-text bg-light text-secondary">Years</span>
+                            </div>
+                            <span asp-validation-for="ExperienceYears" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="HourlyRate" class="form-label text-secondary small fw-bold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-secondary">NPR</span>
+                                <input asp-for="HourlyRate" class="form-control bg-light" />
+                            </div>
+                            <span asp-validation-for="HourlyRate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ServiceAreas" class="form-label text-secondary small fw-bold"></label>
+                            <input asp-for="ServiceAreas" class="form-control bg-light" placeholder="Kathmandu, Lalitpur, Bhaktapur" />
+                            <span asp-validation-for="ServiceAreas" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 mt-3">
+                        <label asp-for="IdentificationDocument" class="form-label text-secondary small fw-bold"></label>
+                        <div class="p-4 border border-2 border-dashed rounded-3 bg-light text-center">
+                            <i class="bi bi-file-earmark-text fs-3 text-secondary mb-2"></i>
+                            <input asp-for="IdentificationDocument" class="form-control form-control-sm w-75 mx-auto" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                             <div class="form-text mt-2">Upload a valid Citizenship Card or National ID (PDF/Image). Max 5MB.</div>
+                        </div>
+                        <span asp-validation-for="IdentificationDocument" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">Submit Application</button>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-link text-decoration-none text-secondary">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
