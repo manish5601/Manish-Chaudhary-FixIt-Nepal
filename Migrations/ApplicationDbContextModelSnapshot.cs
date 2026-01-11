@@ -159,6 +159,39 @@ namespace FixItNepal.Migrations
                     b.ToTable("ProviderDocuments");
                 });
 
+            modelBuilder.Entity("FixItNepal.Models.ServiceItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServiceItems");
+                });
+
             modelBuilder.Entity("FixItNepal.Models.ServiceProvider", b =>
                 {
                     b.Property<int>("Id")
@@ -175,19 +208,6 @@ namespace FixItNepal.Migrations
 
                     b.Property<int>("ExperienceYears")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("FixedPriceMax")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("FixedPriceMin")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("HourlyRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("PricingType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PrimaryService")
                         .HasColumnType("int");

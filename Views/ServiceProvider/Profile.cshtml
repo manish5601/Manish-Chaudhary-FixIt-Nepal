@@ -1,0 +1,163 @@
+@model FixItNepal.ViewModels.ProviderProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Status Badge -->
+            <div class="mb-4">
+                @if (Model.Status == FixItNepal.Models.VerificationStatus.Approved)
+                {
+                    <div class="alert alert-success d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>Verified Provider</strong>
+                            <div class="small">Your profile is active and visible to customers.</div>
+                        </div>
+                    </div>
+                }
+                else if (Model.Status == FixItNepal.Models.VerificationStatus.Pending)
+                {
+                    <div class="alert alert-warning d-flex align-items-center">
+                         <i class="bi bi-hourglass-split me-2 fs-4"></i>
+                        <div>
+                            <strong>Verification Pending</strong>
+                            <div class="small">Admin is reviewing your documents. You cannot receive bookings yet.</div>
+                        </div>
+                    </div>
+                }
+                else if (Model.Status == FixItNepal.Models.VerificationStatus.Rejected)
+                {
+                     <div class="alert alert-danger d-flex align-items-center">
+                        <i class="bi bi-x-circle-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>Application Rejected</strong>
+                            <div class="small">Please contact support for more information.</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h4 class="mb-0 text-primary-custom">My Profile</h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Profile" method="post">
+                        <div class="row">
+                            <!-- Left Column: Personal Info -->
+                            <div class="col-md-4 text-center border-end">
+                                <div class="mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                                    {
+                                        <img src="~/uploads/profiles/@Model.ProfilePicture" class="rounded-circle img-thumbnail shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                                            <i class="bi bi-person fs-1 text-secondary"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <h5 class="fw-bold">@Model.FullName</h5>
+                                <p class="text-secondary small">@Model.Email</p>
+                                <hr />
+                                <div class="text-start px-3">
+                                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Professional Info</h6>
+                                    <p class="mb-2"><strong class="text-dark">Service:</strong> @Model.PrimaryService</p>
+                                    <p class="mb-2"><strong class="text-dark">Experience:</strong> @Model.ExperienceYears Years</p>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Edit Form -->
+                            <div class="col-md-8 ps-md-5">
+                                <h5 class="mb-4 text-secondary border-bottom pb-2">Edit Details</h5>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="FullName" class="form-control" />
+                                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="PhoneNumber" class="form-control" />
+                                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="Address" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="Address" class="form-control" />
+                                        <span asp-validation-for="Address" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-12 mt-4">
+                                        <h6 class="text-secondary border-bottom pb-2 mb-3">Service Details</h6>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="ServiceAreas" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="ServiceAreas" class="form-control" placeholder="Locations you cover" />
+                                        <span asp-validation-for="ServiceAreas" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="ExperienceYears" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="ExperienceYears" class="form-control" />
+                                    </div>
+                                     <div class="col-12">
+                                        <label asp-for="Skills" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="Skills" class="form-control" placeholder="Specific skills e.g. Leak detection, Pipe fitting" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 text-end">
+                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Documents Section -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 text-secondary">Uploaded Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center p-3 border rounded bg-light">
+                                    <i class="bi bi-file-earmark-pdf fs-3 text-danger me-3"></i>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h6 class="mb-1 text-truncate" title="@doc.Type">@doc.Type</h6>
+                                        <small class="text-muted d-block">Uploaded: @doc.UploadedAt.ToShortDateString()</small>
+                                        <a href="~/uploads/documents/@doc.FilePath" target="_blank" class="small text-primary text-decoration-none">View File</a>
+                                    </div>
+                                    @if(doc.IsVerified) {
+                                        <i class="bi bi-check-circle-fill text-success" title="Verified"></i>
+                                    } else {
+                                         <i class="bi bi-clock-history text-warning" title="Pending Verification"></i>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

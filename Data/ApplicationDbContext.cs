@@ -14,5 +14,6 @@ namespace FixItNepal.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<FixItNepal.Models.ServiceProvider> ServiceProviders { get; set; }
         public DbSet<ProviderDocument> ProviderDocuments { get; set; }
+        public DbSet<ServiceItem> ServiceItems { get; set; }
     }
 }

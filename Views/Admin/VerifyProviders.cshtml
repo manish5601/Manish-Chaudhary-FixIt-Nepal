@@ -16,46 +16,46 @@
         <div class="row">
             @foreach (var provider in Model)
             {
-                <div class="col-md-12 mb-4">
-                    <div class="glass-card p-4">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h4>@provider.User?.FullName</h4>
-                                <p class="text-muted">@provider.User?.Email | @provider.User?.PhoneNumber</p>
-                                <span class="badge bg-secondary">@provider.PrimaryService</span>
-                                <p class="mt-2"><strong>Experience:</strong> @provider.ExperienceYears Years</p>
+                <div class="col-md-4 mb-4">
+                    <div class="glass-card p-4 h-100 d-flex flex-column">
+                        <div class="d-flex align-items-center mb-3">
+                             <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <i class="bi bi-person text-secondary fs-4"></i>
                             </div>
                             <div>
-                                <h5 class="text-end">@provider.HourlyRate?.ToString("0.00") NPR/hr</h5>
+                                <h5 class="mb-0 fw-bold">@provider.User?.FullName</h5>
+                                <small class="text-muted">@provider.User?.Email</small>
                             </div>
                         </div>
+                        
+                        <div class="mb-3">
+                            <span class="badge bg-primary-subtle text-primary mb-2">@provider.PrimaryService</span>
+                            <div class="small text-secondary"><i class="bi bi-briefcase me-1"></i>Exp: @provider.ExperienceYears Years</div>
+                            <div class="small text-secondary"><i class="bi bi-geo-alt me-1"></i>@provider.ServiceAreas</div>
+                             <div class="small text-secondary"><i class="bi bi-telephone me-1"></i>@provider.User?.PhoneNumber</div>
+                        </div>
 
-                        <hr />
+                        <hr class="mt-auto" />
 
-                        <h5>Documents</h5>
-                        <div class="row mb-4">
+                        <h6 class="small fw-bold text-secondary">Documents</h6>
+                        <div class="mb-3">
                             @foreach (var doc in provider.Documents)
                             {
-                                <div class="col-md-3">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <p class="card-text">@doc.Type</p>
-                                            <a href="~/uploads/documents/@doc.FilePath" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a href="~/uploads/documents/@doc.FilePath" target="_blank" class="btn btn-sm btn-light border w-100 text-start mb-1 bg-white">
+                                    <i class="bi bi-file-earmark-text me-2 text-danger"></i>@doc.Type
+                                </a>
                             }
                         </div>
 
-                        <div class="d-flex gap-2">
+                        <div class="d-grid gap-2">
                              <form asp-action="ApproveProvider" asp-route-id="@provider.Id" method="post">
-                                 <button type="submit" class="btn btn-success">Approve</button>
+                                 <button type="submit" class="btn btn-success w-100">Approve</button>
                              </form>
                              
-                             <!-- Simple Reject Button with Reason Modal trigger would go here, simpler inline form for MVP -->
+                             <!-- Simple Reject Button -->
                              <form asp-action="RejectProvider" asp-route-id="@provider.Id" method="post" class="d-flex gap-2">
-                                 <input type="text" name="rejectionReason" class="form-control" placeholder="Reason for rejection" required />
-                                 <button type="submit" class="btn btn-danger">Reject</button>
+                                 <input type="text" name="rejectionReason" class="form-control form-control-sm" placeholder="Reason" required />
+                                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                              </form>
                         </div>
                     </div>

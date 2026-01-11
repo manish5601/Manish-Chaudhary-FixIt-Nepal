@@ -1,0 +1,81 @@
+@model FixItNepal.ViewModels.CustomerProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h4 class="mb-0 text-primary-custom">My Profile</h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Profile" method="post">
+                        <div class="row">
+                            <!-- Left Column: Avatar & Summary -->
+                            <div class="col-md-4 text-center border-end">
+                                <div class="mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                                    {
+                                        <img src="~/uploads/profiles/@Model.ProfilePicture" class="rounded-circle img-thumbnail shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                                            <i class="bi bi-person fs-1 text-secondary"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <h5 class="fw-bold">@Model.FullName</h5>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill mb-3">Customer</span>
+                                <p class="text-secondary small">@Model.Email</p>
+                            </div>
+
+                            <!-- Right Column: Edit Form -->
+                            <div class="col-md-8 ps-md-5">
+                                <h5 class="mb-4 text-secondary border-bottom pb-2">Account Details</h5>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="FullName" class="form-control" />
+                                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="PhoneNumber" class="form-control" />
+                                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="Address" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="Address" class="form-control" />
+                                        <span asp-validation-for="Address" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="PreferredLocation" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="PreferredLocation" class="form-control" placeholder="E.g. Near Thamel" />
+                                        <div class="form-text small">This helps us recommend providers near you.</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 text-end">
+                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

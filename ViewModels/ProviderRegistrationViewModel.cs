@@ -41,10 +41,6 @@ namespace FixItNepal.ViewModels
         [Range(0, 50)]
         public int ExperienceYears { get; set; }
 
-        [Required]
-        [Display(Name = "Hourly Rate (NPR)")]
-        public decimal HourlyRate { get; set; }
-
         [Display(Name = "Service Areas (Comma separated)")]
         public string ServiceAreas { get; set; }
 

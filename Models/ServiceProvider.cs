@@ -43,12 +43,7 @@ namespace FixItNepal.Models
 
         public string? ServiceAreas { get; set; } // Comma-separated locations
 
-        [Required]
-        public string PricingType { get; set; } = "Hourly"; // Hourly, Fixed, Range
-
-        public decimal? HourlyRate { get; set; }
-        public decimal? FixedPriceMin { get; set; }
-        public decimal? FixedPriceMax { get; set; }
+        // Pricing handled by Admin via ServiceItem
 
         public VerificationStatus Status { get; set; } = VerificationStatus.Pending;
 

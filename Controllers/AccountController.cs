@@ -44,6 +44,13 @@ namespace FixItNepal.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("", "User already exists.");
+                return View(model);
+            }
+
             // Profile Picture Logic
             string profilePicPath = null;
             if (model.ProfileImage != null && model.ProfileImage.Length > 0)
@@ -113,6 +120,13 @@ namespace FixItNepal.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("", "User already exists.");
+                return View(model);
+            }
+
             // Profile Picture Logic
             string profilePicPath = null;
             if (model.ProfileImage != null && model.ProfileImage.Length > 0)
@@ -166,10 +180,9 @@ namespace FixItNepal.Controllers
                     UserId = user.Id,
                     PrimaryService = model.PrimaryService,
                     ExperienceYears = model.ExperienceYears,
-                    HourlyRate = model.HourlyRate,
                     ServiceAreas = model.ServiceAreas,
                     Skills = model.Skills,
-                    PricingType = "Hourly", // Simplified for MVP
+                    // PricingType = "Hourly", Removed
                     Status = VerificationStatus.Pending,
                     RegisteredAt = DateTime.UtcNow
                 };
