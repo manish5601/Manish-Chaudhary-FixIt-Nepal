@@ -87,6 +87,7 @@ namespace FixItNepal.Controllers
         {
             var pendingProviders = await _context.ServiceProviders
                 .Include(p => p.User)
+                .Include(p => p.ServiceCategory)
                 .Include(p => p.Documents)
                 .Where(p => p.Status == VerificationStatus.Pending)
                 .ToListAsync();
@@ -127,6 +128,93 @@ namespace FixItNepal.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(VerifyProviders));
+        }
+
+        // GET: /Admin/UserManagement
+        public async Task<IActionResult> UserManagement(string role, string search)
+        {
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(u => u.Email.Contains(search) || u.FullName.Contains(search));
+            }
+
+            var users = await query.ToListAsync();
+            var userViewModels = new List<UserManagementViewModel>();
+
+            foreach (var user in users)
+            {
+                var roles = await _context.UserRoles
+                    .Where(ur => ur.UserId == user.Id)
+                    .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                    .ToListAsync();
+                
+                // Exclude current admin from list to prevent self-lockout
+                if (user.UserName == User.Identity.Name) continue;
+
+                if (!string.IsNullOrEmpty(role) && !roles.Contains(role)) continue;
+
+                userViewModels.Add(new UserManagementViewModel
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Role = string.Join(", ", roles),
+                    IsActive = user.IsActive,
+                    ProfilePicture = user.ProfilePicture
+                });
+            }
+
+            ViewBag.CurrentRole = role;
+            ViewBag.CurrentSearch = search;
+            return View(userViewModels);
+        }
+
+        // POST: /Admin/ToggleUserStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleUserStatus(string id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            // Prevent Action on Super Admin
+            if (user.Email == "admin@fixitnepal.com") 
+            {
+                 // TempData logic can be handled in View or simplified
+                 return RedirectToAction(nameof(UserManagement));
+            }
+
+            user.IsActive = !user.IsActive;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(UserManagement));
+        }
+
+        // POST: /Admin/DeleteUser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.Email == "admin@fixitnepal.com") return RedirectToAction(nameof(UserManagement));
+
+            // Remove relevant related entities manually if needed
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
+            if (customer != null) _context.Customers.Remove(customer);
+
+            var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == id);
+            if (provider != null) _context.ServiceProviders.Remove(provider);
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(UserManagement));
         }
     }
 }

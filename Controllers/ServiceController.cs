@@ -20,13 +20,24 @@ namespace FixItNepal.Controllers
         // GET: Service
         public async Task<IActionResult> Index()
         {
-            return View(await _context.ServiceItems.ToListAsync());
+            var services = await _context.ServiceItems.Include(s => s.ServiceCategory).ToListAsync();
+            return View(services);
         }
 
         // GET: Service/Create
         public IActionResult Create()
         {
-            return View();
+            var model = new ServiceItemViewModel
+            {
+                Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList()
+            };
+            return View(model);
         }
 
         // POST: Service/Create
@@ -55,7 +66,7 @@ namespace FixItNepal.Controllers
                     Name = model.Name,
                     Description = model.Description,
                     BasePrice = model.BasePrice,
-                    Category = model.Category,
+                    ServiceCategoryId = model.ServiceCategoryId,
                     ImageUrl = imagePath,
                     IsActive = model.IsActive
                 };
@@ -64,6 +75,14 @@ namespace FixItNepal.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            // Repopulate categories if model state is invalid
+            model.Categories = _context.ServiceCategories
+                .Where(c => c.IsActive)
+                .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                     Value = c.Id.ToString(),
+                     Text = c.Name
+                }).ToList();
             return View(model);
         }
 
@@ -81,9 +100,16 @@ namespace FixItNepal.Controllers
                 Name = serviceItem.Name,
                 Description = serviceItem.Description,
                 BasePrice = serviceItem.BasePrice,
-                Category = serviceItem.Category,
+                ServiceCategoryId = serviceItem.ServiceCategoryId,
                 CurrentImageUrl = serviceItem.ImageUrl,
-                IsActive = serviceItem.IsActive
+                IsActive = serviceItem.IsActive,
+                Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList()
             };
 
             return View(model);
@@ -106,7 +132,7 @@ namespace FixItNepal.Controllers
                     serviceItem.Name = model.Name;
                     serviceItem.Description = model.Description;
                     serviceItem.BasePrice = model.BasePrice;
-                    serviceItem.Category = model.Category;
+                    serviceItem.ServiceCategoryId = model.ServiceCategoryId;
                     serviceItem.IsActive = model.IsActive;
 
                     if (model.ImageFile != null && model.ImageFile.Length > 0)
@@ -132,6 +158,14 @@ namespace FixItNepal.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            model.Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList();
             return View(model);
         }
 

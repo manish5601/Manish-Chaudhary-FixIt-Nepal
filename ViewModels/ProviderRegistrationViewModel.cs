@@ -33,8 +33,11 @@ namespace FixItNepal.ViewModels
 
         // Professional Info
         [Required]
+
         [Display(Name = "Primary Service")]
-        public ServiceCategory PrimaryService { get; set; }
+        public int ServiceCategoryId { get; set; }
+
+        public IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>? Categories { get; set; }
 
         [Required]
         [Display(Name = "Years of Experience")]

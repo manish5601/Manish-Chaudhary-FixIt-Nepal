@@ -67,9 +67,9 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="PrimaryService" class="form-label text-secondary small fw-bold"></label>
-                            <select asp-for="PrimaryService" class="form-select bg-light" asp-items="Html.GetEnumSelectList<FixItNepal.Models.ServiceCategory>()"></select>
-                            <span asp-validation-for="PrimaryService" class="text-danger small"></span>
+                            <label asp-for="ServiceCategoryId" class="form-label text-secondary small fw-bold"></label>
+                            <select asp-for="ServiceCategoryId" class="form-select bg-light" asp-items="Model.Categories"></select>
+                            <span asp-validation-for="ServiceCategoryId" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="ExperienceYears" class="form-label text-secondary small fw-bold"></label>

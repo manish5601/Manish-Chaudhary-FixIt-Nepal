@@ -1,0 +1,144 @@
+@model IEnumerable<FixItNepal.Models.ServiceProvider>
+
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="@Url.Action("Search", "Home")">
+                        <input type="hidden" name="query" value="@ViewBag.Query" />
+                        <input type="hidden" name="lat" id="lat" />
+                        <input type="hidden" name="lng" id="lng" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Category</label>
+                            <select name="categoryId" class="form-select">
+                                <option value="">All Categories</option>
+                                @foreach (var cat in ViewBag.Categories as List<FixItNepal.Models.ServiceCategory>)
+                                {
+                                    <option value="@cat.Id" selected="@(ViewBag.CategoryId == cat.Id)">@cat.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Minimum Rating</label>
+                            <select name="minRating" class="form-select">
+                                <option value="">Any Rating</option>
+                                <option value="4" selected="@(ViewBag.MinRating == 4)">4+ Stars</option>
+                                <option value="3" selected="@(ViewBag.MinRating == 3)">3+ Stars</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Distance (km)</label>
+                            <input type="range" class="form-range" min="1" max="50" step="1" id="distanceRange" name="maxDistanceKm" value="10" oninput="document.getElementById('distVal').innerText = this.value + ' km'">
+                            <span id="distVal" class="small text-muted">10 km</span>
+                        </div>
+                        
+                         <button type="button" class="btn btn-outline-primary w-100 mb-2" id="useLocBtn">
+                            <i class="bi bi-geo-alt me-2"></i>Use My Location
+                        </button>
+
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col-md-9">
+            <h4 class="mb-4">
+                @if(!string.IsNullOrEmpty(ViewBag.Query)) {
+                    <span>Results for "@ViewBag.Query"</span>
+                } else {
+                    <span>All Services</span>
+                }
+                <small class="text-muted ms-2 fs-6">(@Model.Count() found)</small>
+            </h4>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-search fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                    <p class="text-muted">No service providers found matching your criteria.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm border-0 transition-hover">
+                                <div class="position-relative">
+                                     @if (!string.IsNullOrEmpty(item.User.ProfilePicture))
+                                    {
+                                        <img src="~/uploads/profiles/@item.User.ProfilePicture" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@item.User.FullName">
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <i class="bi bi-person fs-1 text-secondary"></i>
+                                        </div>
+                                    }
+                                    <span class="badge bg-primary position-absolute top-0 end-0 m-3">@item.ServiceCategory.Name</span>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold">@item.User.FullName</h5>
+                                    <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>@(item.Address ?? item.ServiceAreas ?? "Kathmandu")</p>
+                                    
+                                     <div class="d-flex align-items-center mb-3">
+                                        <div class="d-flex text-warning small me-2">
+                                            @for(int i=0; i<5; i++) {
+                                                if(i < Math.Round(item.AverageRating)) { <i class="bi bi-star-fill"></i> }
+                                                else { <i class="bi bi-star"></i> }
+                                            }
+                                        </div>
+                                        <span class="small text-muted">(@item.TotalReviews reviews)</span>
+                                    </div>
+                                    
+                                    <p class="card-text small text-secondary line-clamp-2">@(item.Skills ?? "Experienced professional")</p>
+                                </div>
+                                <div class="card-footer bg-white border-0 pt-0 pb-3">
+                                    <div class="d-grid">
+                                        <a href="/Customer/Book/@item.Id" class="btn btn-outline-primary rounded-pill">Book Service</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <Script>
+        document.getElementById('useLocBtn').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Locating...';
+                navigator.geolocation.getCurrentPosition((position) => {
+                    document.getElementById('lat').value = position.coords.latitude;
+                    document.getElementById('lng').value = position.coords.longitude;
+                    this.innerHTML = '<i class="bi bi-check-circle me-2"></i>Location Set';
+                    this.classList.replace('btn-outline-primary', 'btn-success');
+                }, () => {
+                    alert('Unable to retrieve your location');
+                    this.innerHTML = '<i class="bi bi-geo-alt me-2"></i>Use My Location';
+                });
+            } else {
+                alert('Geolocation is not supported by your browser');
+            }
+        });
+    </Script>
+}

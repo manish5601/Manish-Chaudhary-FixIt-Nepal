@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FixItNepal.Models
 {
@@ -20,7 +21,10 @@ namespace FixItNepal.Models
         public decimal BasePrice { get; set; }
 
         [Required]
-        public ServiceCategory Category { get; set; }
+        public int ServiceCategoryId { get; set; }
+
+        [ForeignKey("ServiceCategoryId")]
+        public ServiceCategory ServiceCategory { get; set; }
 
         public string? ImageUrl { get; set; }
 

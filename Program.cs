@@ -17,25 +17,22 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Add JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = System.Text.Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-
-builder.Services.AddAuthentication(options =>
-{
-    // We want to support both Cookies (for MVC) and JWT (for API)
-    // DefaultScheme is usually Cookie for MVC apps, but we can verify in Controller
-})
+// Add Authentication (Identity handles Cookies, we add JWT)
+builder.Services.AddAuthentication()
 .AddJwtBearer(options =>
 {
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var jwtKey = jwtSettings["Key"] ?? "SUPER_SECRET_FALLBACK_KEY_AT_LEAST_32_CHARS_LONG!!";
+    var key = System.Text.Encoding.UTF8.GetBytes(jwtKey);
+
     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = jwtSettings["Issuer"] ?? "http://localhost:5000",
+        ValidAudience = jwtSettings["Audience"] ?? "http://localhost:5000",
         IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key)
     };
 });
@@ -61,5 +58,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllers();
 
 app.Run();

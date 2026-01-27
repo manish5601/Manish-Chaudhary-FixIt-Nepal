@@ -34,6 +34,23 @@ namespace FixItNepal.Data
                 if (result.Succeeded)
                     await userManager.AddToRoleAsync(admin, "Admin");
             }
+
+            // Seed Service Categories
+            var context = services.GetRequiredService<ApplicationDbContext>();
+             if (!context.ServiceCategories.Any())
+            {
+                var categories = new List<ServiceCategory>
+                {
+                    new ServiceCategory { Name = "Plumbing", Description = "Pipe repairs and installation", IconPath = "bi-droplet", IsActive = true },
+                    new ServiceCategory { Name = "Electrical", Description = "Wiring and appliance repair", IconPath = "bi-lightning", IsActive = true },
+                    new ServiceCategory { Name = "Cleaning", Description = "Home and office cleaning", IconPath = "bi-stars", IsActive = true },
+                    new ServiceCategory { Name = "Painting", Description = "Wall painting and decoration", IconPath = "bi-paint-bucket", IsActive = true },
+                    new ServiceCategory { Name = "Carpentry", Description = "Furniture repair and assembly", IconPath = "bi-hammer", IsActive = true }
+                };
+
+                context.ServiceCategories.AddRange(categories);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

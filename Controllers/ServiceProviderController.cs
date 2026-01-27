@@ -53,12 +53,20 @@ namespace FixItNepal.Controllers
                 Address = user.Address,
                 Email = user.Email,
                 ProfilePicture = user.ProfilePicture,
-                PrimaryService = provider.PrimaryService,
+                ServiceCategoryId = provider.ServiceCategoryId,
+                ServiceCategoryName = provider.ServiceCategory?.Name,
                 ExperienceYears = provider.ExperienceYears,
                 ServiceAreas = provider.ServiceAreas,
                 Skills = provider.Skills,
                 Status = provider.Status,
-                Documents = provider.Documents.ToList()
+                Documents = provider.Documents.ToList(),
+                Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList()
             };
 
             return View(model);
@@ -84,7 +92,9 @@ namespace FixItNepal.Controllers
                 await _userManager.UpdateAsync(user);
 
                 // Update Provider Info
-                 // Note: PrimaryService usually shouldn't be changed easily as documents are tied to it, but keeping flexible for now or lock it.
+                // Update Provider Info
+                // Note: PrimaryService usually shouldn't be changed easily as documents are tied to it, but keeping flexible for now.
+                provider.ServiceCategoryId = model.ServiceCategoryId;
                 provider.ServiceAreas = model.ServiceAreas;
                 provider.Skills = model.Skills;
                 provider.ExperienceYears = model.ExperienceYears;
@@ -97,5 +107,6 @@ namespace FixItNepal.Controllers
             }
             return View(model);
         }
+
     }
 }

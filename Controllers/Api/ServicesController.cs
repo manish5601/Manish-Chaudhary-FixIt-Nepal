@@ -18,12 +18,12 @@ namespace FixItNepal.Controllers.Api
 
         // GET: api/services/categories
         [HttpGet("categories")]
-        public IActionResult GetCategories()
+        public async Task<IActionResult> GetCategories()
         {
-            var categories = Enum.GetValues(typeof(ServiceCategory))
-                                 .Cast<ServiceCategory>()
-                                 .Select(c => new { Id = (int)c, Name = c.ToString() })
-                                 .ToList();
+            var categories = await _context.ServiceCategories
+                                 .Where(c => c.IsActive)
+                                 .Select(c => new { c.Id, c.Name })
+                                 .ToListAsync();
             return Ok(categories);
         }
 
@@ -33,12 +33,13 @@ namespace FixItNepal.Controllers.Api
         {
             var providers = await _context.ServiceProviders
                 .Include(p => p.User)
+                .Include(p => p.ServiceCategory)
                 .Where(p => p.Status == VerificationStatus.Approved)
                 .Select(p => new
                 {
                     p.Id,
                     p.User.FullName,
-                    Service = p.PrimaryService.ToString(),
+                    Service = p.ServiceCategory.Name,
                     Rating = p.AverageRating,
                     p.ExperienceYears,
                     p.ServiceAreas,

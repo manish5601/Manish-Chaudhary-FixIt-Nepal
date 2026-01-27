@@ -19,7 +19,12 @@ namespace FixItNepal.ViewModels
         public string? ProfilePicture { get; set; }
 
         // Service Info
-        public ServiceCategory PrimaryService { get; set; }
+        [Display(Name = "Primary Service")]
+        public int ServiceCategoryId { get; set; }
+        
+        public string? ServiceCategoryName { get; set; }
+
+        public IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>? Categories { get; set; }
 
         [Display(Name = "Years of Experience")]
         public int ExperienceYears { get; set; }

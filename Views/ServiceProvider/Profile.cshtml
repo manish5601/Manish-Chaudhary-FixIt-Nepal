@@ -75,7 +75,7 @@
                                 <hr />
                                 <div class="text-start px-3">
                                     <h6 class="text-muted text-uppercase small fw-bold mb-3">Professional Info</h6>
-                                    <p class="mb-2"><strong class="text-dark">Service:</strong> @Model.PrimaryService</p>
+                                    <p class="mb-2"><strong class="text-dark">Service:</strong> @Model.ServiceCategoryName</p>
                                     <p class="mb-2"><strong class="text-dark">Experience:</strong> @Model.ExperienceYears Years</p>
                                 </div>
                             </div>
@@ -103,6 +103,12 @@
                                     
                                     <div class="col-12 mt-4">
                                         <h6 class="text-secondary border-bottom pb-2 mb-3">Service Details</h6>
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        <label asp-for="ServiceCategoryId" class="form-label text-secondary small fw-bold"></label>
+                                        <select asp-for="ServiceCategoryId" asp-items="Model.Categories" class="form-select"></select>
+                                        <span asp-validation-for="ServiceCategoryId" class="text-danger small"></span>
                                     </div>
 
                                     <div class="col-md-6">

@@ -15,6 +15,8 @@ namespace FixItNepal.Models
         public ApplicationUser User { get; set; } = null!;
 
         public string? PreferredLocation { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
 
         // Navigation

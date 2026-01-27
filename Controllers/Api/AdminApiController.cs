@@ -24,6 +24,7 @@ namespace FixItNepal.Controllers.Api
         {
             var pendingProviders = await _context.ServiceProviders
                 .Include(p => p.User)
+                .Include(p => p.ServiceCategory)
                 .Where(p => p.Status == VerificationStatus.Pending)
                 .Select(p => new
                 {
@@ -31,7 +32,7 @@ namespace FixItNepal.Controllers.Api
                     p.User.FullName,
                     p.User.Email,
                     p.User.PhoneNumber,
-                    Service = p.PrimaryService.ToString(),
+                    Service = p.ServiceCategory.Name,
                     p.ExperienceYears,
                     RegisteredAt = p.RegisteredAt
                 })

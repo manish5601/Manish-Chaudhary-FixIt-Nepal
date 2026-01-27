@@ -20,7 +20,10 @@ namespace FixItNepal.ViewModels
         public decimal BasePrice { get; set; }
 
         [Required]
-        public ServiceCategory Category { get; set; }
+        [Display(Name = "Category")]
+        public int ServiceCategoryId { get; set; }
+
+        public IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>? Categories { get; set; }
 
         [Display(Name = "Service Image")]
         public IFormFile? ImageFile { get; set; }

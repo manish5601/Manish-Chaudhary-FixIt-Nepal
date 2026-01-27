@@ -7,8 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ServiceProviderModel = FixItNepal.Models.ServiceProvider;
-using System.Security.Claims;
-using System.Text;
+
 
 namespace FixItNepal.Controllers.Api
 {
@@ -191,7 +190,7 @@ namespace FixItNepal.Controllers.Api
                 var serviceProvider = new ServiceProviderModel
                 {
                     UserId = user.Id,
-                    PrimaryService = model.PrimaryService,
+                    ServiceCategoryId = model.ServiceCategoryId,
                     ExperienceYears = model.ExperienceYears,
                     ServiceAreas = model.ServiceAreas,
                     Skills = model.Skills,

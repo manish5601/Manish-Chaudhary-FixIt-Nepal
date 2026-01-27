@@ -11,17 +11,6 @@ namespace FixItNepal.Models
         Suspended
     }
 
-    public enum ServiceCategory
-    {
-        Plumbing,
-        Electrical,
-        Carpentry,
-        Painting,
-        Cleaning,
-        ACRepair,
-        Other
-    }
-
     public class ServiceProvider
     {
         [Key]
@@ -34,7 +23,10 @@ namespace FixItNepal.Models
         public ApplicationUser User { get; set; } = null!;
 
         [Required]
-        public ServiceCategory PrimaryService { get; set; }
+        public int ServiceCategoryId { get; set; }
+
+        [ForeignKey("ServiceCategoryId")]
+        public ServiceCategory ServiceCategory { get; set; }
 
         public string? Skills { get; set; } // Comma-separated additional skills
 
@@ -42,6 +34,11 @@ namespace FixItNepal.Models
         public int ExperienceYears { get; set; }
 
         public string? ServiceAreas { get; set; } // Comma-separated locations
+
+        // Location Info
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? Address { get; set; }
 
         // Pricing handled by Admin via ServiceItem
 

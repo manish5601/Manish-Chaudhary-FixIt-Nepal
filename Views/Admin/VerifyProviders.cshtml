@@ -29,7 +29,7 @@
                         </div>
                         
                         <div class="mb-3">
-                            <span class="badge bg-primary-subtle text-primary mb-2">@provider.PrimaryService</span>
+                            <span class="badge bg-primary-subtle text-primary mb-2">@provider.ServiceCategory?.Name</span>
                             <div class="small text-secondary"><i class="bi bi-briefcase me-1"></i>Exp: @provider.ExperienceYears Years</div>
                             <div class="small text-secondary"><i class="bi bi-geo-alt me-1"></i>@provider.ServiceAreas</div>
                              <div class="small text-secondary"><i class="bi bi-telephone me-1"></i>@provider.User?.PhoneNumber</div>
@@ -52,7 +52,6 @@
                                  <button type="submit" class="btn btn-success w-100">Approve</button>
                              </form>
                              
-                             <!-- Simple Reject Button -->
                              <form asp-action="RejectProvider" asp-route-id="@provider.Id" method="post" class="d-flex gap-2">
                                  <input type="text" name="rejectionReason" class="form-control form-control-sm" placeholder="Reason" required />
                                  <button type="submit" class="btn btn-danger btn-sm">Reject</button>

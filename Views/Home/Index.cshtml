@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<FixItNepal.Models.ServiceCategory>
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -11,11 +12,11 @@
                     <h1 class="display-3 fw-bold mb-4 text-white">Fix Your Home <span class="text-primary">Hassle Free</span></h1>
                     <p class="lead text-light mb-5 opacity-75">Professional services at your doorstep. From plumbing to electrical repairs, we've got you covered with trusted experts.</p>
                     
-                    <form action="#" method="get" class="card shadow-lg border-0 p-2 mx-auto" style="max-width: 600px;">
+                    <form action="@Url.Action("Search", "Home")" method="get" class="card shadow-lg border-0 p-2 mx-auto" style="max-width: 600px;">
                         <div class="d-flex">
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-0"><i class="bi bi-search text-secondary"></i></span>
-                                <input class="form-control border-0 shadow-none ps-0" type="search" placeholder="What needs fixing today?" aria-label="Search">
+                                <input class="form-control border-0 shadow-none ps-0" type="search" name="query" placeholder="What needs fixing today?" aria-label="Search">
                                 <button class="btn btn-primary rounded-3 px-4" type="submit">Search</button>
                             </div>
                         </div>
@@ -23,11 +24,59 @@
 
                     <div class="mt-4 pt-2">
                         <small class="text-light fw-bold me-2">Popular:</small>
-                        <a href="#" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Plumbing</a>
-                        <a href="#" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Electrical</a>
-                        <a href="#" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Cleaning</a>
+                        <a href="@Url.Action("Search", "Home", new { query = "Plumbing" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Plumbing</a>
+                        <a href="@Url.Action("Search", "Home", new { query = "Electrical" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Electrical</a>
+                        <a href="@Url.Action("Search", "Home", new { query = "Cleaning" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Cleaning</a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Map Section -->
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Find Technicians Near You</h2>
+            <p class="text-secondary">Locate expert help in your neighborhood</p>
+        </div>
+        
+        <!-- Map Filters -->
+        <div class="row g-2 mb-3 justify-content-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-geo-alt text-primary"></i></span>
+                    <input type="text" id="locationSearch" class="form-control" placeholder="Search location...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select id="distanceFilter" class="form-select">
+                    <option value="5">Within 5 km</option>
+                    <option value="10" selected>Within 10 km</option>
+                    <option value="20">Within 20 km</option>
+                    <option value="50">Within 50 km</option>
+                </select>
+            </div>
+             <div class="col-md-2">
+                <select id="ratingFilter" class="form-select">
+                    <option value="0">Any Rating</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="4.5">4.5+ Stars</option>
+                </select>
+            </div>
+             <div class="col-md-2">
+                <button id="applyFilters" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-lg overflow-hidden">
+            <div id="homeMap" style="height: 500px; width: 100%;"></div>
+             <div class="card-footer bg-white border-0 py-3 text-center">
+                <button id="useMyLocation" class="btn btn-outline-primary rounded-pill">
+                    <i class="bi bi-crosshair me-2"></i>Use My Location
+                </button>
             </div>
         </div>
     </div>
@@ -41,47 +90,21 @@
     </div>
     
     <div class="row g-4">
-        <!-- Plumbing -->
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4">
-                <div class="card-body">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-wrench-adjustable fs-1"></i>
+        @foreach (var category in Model)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4 hover-shadow transition-all">
+                    <div class="card-body">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-4" style="width: 80px; height: 80px;">
+                            <i class="bi @(string.IsNullOrEmpty(category.IconPath) ? "bi-tools" : category.IconPath) fs-1"></i>
+                        </div>
+                        <h4 class="card-title fw-bold mb-3">@category.Name</h4>
+                        <p class="card-text text-secondary mb-4">@category.Description</p>
+                        <a href="@Url.Action("Search", "Home", new { categoryId = category.Id })" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
                     </div>
-                    <h4 class="card-title fw-bold mb-3">Plumbing</h4>
-                    <p class="card-text text-secondary mb-4">Pipe repairs, installation, leakage fixing, and bathroom fitting services.</p>
-                    <a href="#" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
                 </div>
             </div>
-        </div>
-        
-        <!-- Electrical -->
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4">
-                <div class="card-body">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning rounded-circle mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-lightning-charge fs-1"></i>
-                    </div>
-                    <h4 class="card-title fw-bold mb-3">Electrical</h4>
-                    <p class="card-text text-secondary mb-4">Wiring repairs, appliance installation, circuit fixing, and safety checks.</p>
-                    <a href="#" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Carpentry -->
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4">
-                <div class="card-body">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-hammer fs-1"></i>
-                    </div>
-                    <h4 class="card-title fw-bold mb-3">Carpentry</h4>
-                    <p class="card-text text-secondary mb-4">Furniture repair, custom furniture making, polishing, and wood restoration.</p>
-                    <a href="#" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 </div>
 
@@ -125,6 +148,83 @@
                     <h3 class="position-absolute text-muted">Reliable & Secure</h3>
                  </div>
             </div>
-        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/maps.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mapService = new GoogleMapService("homeMap");
+            mapService.init();
+            
+            let currentLat = null;
+            let currentLng = null;
+
+            // Initial Load
+            mapService.loadProviders('/api/Maps/providers');
+
+            // Autocomplete Setup
+            const input = document.getElementById("locationSearch");
+            // Check if google maps libraries are loaded
+            if (google.maps.places) {
+                const autocomplete = new google.maps.places.Autocomplete(input);
+                autocomplete.addListener("place_changed", () => {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        currentLat = place.geometry.location.lat();
+                        currentLng = place.geometry.location.lng();
+                        
+                        mapService.map.setCenter({lat: currentLat, lng: currentLng});
+                        mapService.map.setZoom(14);
+                        
+                        // Add marker for selected location
+                        if (mapService.userMarker) mapService.userMarker.setMap(null);
+                        mapService.userMarker = new google.maps.Marker({
+                            position: {lat: currentLat, lng: currentLng},
+                            map: mapService.map,
+                            title: "Selected Location",
+                            icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                        });
+
+                        loadWithFilters();
+                    }
+                });
+            }
+
+            function loadWithFilters() {
+                const radius = document.getElementById("distanceFilter").value;
+                const minRating = document.getElementById("ratingFilter").value;
+                
+                const params = {
+                    radius: radius,
+                    minRating: minRating
+                };
+                
+                if (currentLat && currentLng) {
+                    params.lat = currentLat;
+                    params.lng = currentLng;
+                }
+                
+                mapService.loadProviders('/api/Maps/providers', params);
+            }
+
+            document.getElementById("applyFilters").addEventListener("click", loadWithFilters);
+            document.getElementById("distanceFilter").addEventListener("change", loadWithFilters);
+            document.getElementById("ratingFilter").addEventListener("change", loadWithFilters);
+
+            document.getElementById("useMyLocation").addEventListener("click", function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Locating...';
+                
+                mapService.getCurrentLocation((pos) => {
+                    currentLat = pos.lat;
+                    currentLng = pos.lng;
+                    btn.innerHTML = originalText;
+                    loadWithFilters();
+                });
+            });
+        });
+    </script>
+}

@@ -110,7 +110,17 @@ namespace FixItNepal.Controllers
         [HttpGet]
         public IActionResult RegisterProvider()
         {
-            return View();
+            var model = new ProviderRegistrationViewModel
+            {
+                Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList()
+            };
+            return View(model);
         }
         
         // POST: /Account/RegisterProvider
@@ -118,12 +128,29 @@ namespace FixItNepal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterProvider(ProviderRegistrationViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) 
+            {
+                model.Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList();
+                return View(model);
+            }
 
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
                 ModelState.AddModelError("", "User already exists.");
+                model.Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList();
                 return View(model);
             }
 
@@ -178,7 +205,7 @@ namespace FixItNepal.Controllers
                 var serviceProvider = new ServiceProviderModel
                 {
                     UserId = user.Id,
-                    PrimaryService = model.PrimaryService,
+                    ServiceCategoryId = model.ServiceCategoryId,
                     ExperienceYears = model.ExperienceYears,
                     ServiceAreas = model.ServiceAreas,
                     Skills = model.Skills,
@@ -208,6 +235,14 @@ namespace FixItNepal.Controllers
                 // Redirect to a specific "Pending Verification" page or Dashboard
                 return RedirectToAction("Dashboard", "ServiceProvider");
             }
+
+            model.Categories = _context.ServiceCategories
+                    .Where(c => c.IsActive)
+                    .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList();
 
             foreach (var error in result.Errors)
             {
