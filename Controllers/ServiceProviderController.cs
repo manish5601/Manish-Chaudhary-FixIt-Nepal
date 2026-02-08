@@ -91,14 +91,28 @@ namespace FixItNepal.Controllers
                 user.Address = model.Address;
                 await _userManager.UpdateAsync(user);
 
+                // Handle profile image upload
+                if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles");
+                    Directory.CreateDirectory(uploadsFolder);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ProfileImage.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfileImage.CopyToAsync(fileStream);
+                    }
+                    user.ProfilePicture = uniqueFileName;
+                }
+                
+                await _userManager.UpdateAsync(user);
+
                 // Update Provider Info
-                // Update Provider Info
-                // Note: PrimaryService usually shouldn't be changed easily as documents are tied to it, but keeping flexible for now.
-                provider.ServiceCategoryId = model.ServiceCategoryId;
+                provider.ExperienceYears = model.ExperienceYears;
                 provider.ServiceAreas = model.ServiceAreas;
                 provider.Skills = model.Skills;
-                provider.ExperienceYears = model.ExperienceYears;
-                
+                provider.ServiceCategoryId = model.ServiceCategoryId;
+
                 _context.Update(provider);
                 await _context.SaveChangesAsync();
 

@@ -51,6 +51,27 @@ namespace FixItNepal.Data
                 context.ServiceCategories.AddRange(categories);
                 await context.SaveChangesAsync();
             }
+
+            // Seed Service Items
+            if (!context.ServiceItems.Any())
+            {
+                var plumbing = context.ServiceCategories.FirstOrDefault(c => c.Name == "Plumbing");
+                var electrical = context.ServiceCategories.FirstOrDefault(c => c.Name == "Electrical");
+
+                if (plumbing != null && electrical != null)
+                {
+                    var serviceItems = new List<ServiceItem>
+                    {
+                        new ServiceItem { Name = "Pipe Leak Repair", Description = "Fixing leaking pipes", BasePrice = 500, ServiceCategoryId = plumbing.Id, IsActive = true },
+                        new ServiceItem { Name = "Tap Installation", Description = "Install new water tap", BasePrice = 300, ServiceCategoryId = plumbing.Id, IsActive = true },
+                        new ServiceItem { Name = "Switch Replacement", Description = "Replace damaged switch", BasePrice = 200, ServiceCategoryId = electrical.Id, IsActive = true },
+                        new ServiceItem { Name = "Fan Installation", Description = "Ceiling fan installation", BasePrice = 400, ServiceCategoryId = electrical.Id, IsActive = true }
+                    };
+                    
+                    context.ServiceItems.AddRange(serviceItems);
+                    await context.SaveChangesAsync();
+                }
+            }
         }
     }
 }

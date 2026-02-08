@@ -18,6 +18,9 @@ namespace FixItNepal.ViewModels
 
         public string? ProfilePicture { get; set; }
 
+        [Display(Name = "Upload Profile Picture")]
+        public IFormFile? ProfileImage { get; set; }
+
         // Service Info
         [Display(Name = "Primary Service")]
         public int ServiceCategoryId { get; set; }

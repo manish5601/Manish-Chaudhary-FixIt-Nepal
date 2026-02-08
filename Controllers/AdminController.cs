@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using FixItNepal.Models;
 using FixItNepal.Data;
 using FixItNepal.ViewModels;
+using FixItNepal.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace FixItNepal.Controllers
 {
@@ -11,10 +13,14 @@ namespace FixItNepal.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService)
         {
             _context = context;
+            _userManager = userManager;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Dashboard()
@@ -110,6 +116,21 @@ namespace FixItNepal.Controllers
             _context.Update(provider);
             await _context.SaveChangesAsync();
 
+            // Send Email to Provider
+            var providerUser = await _userManager.FindByIdAsync(provider.UserId);
+            if (providerUser != null)
+            {
+                var subject = "Account Approved - FixIt Nepal";
+                var body = $@"
+                    <h2>Account Approved</h2>
+                    <p>Hello {providerUser.FullName},</p>
+                    <p>Congratulations! Your service provider account has been <strong>Approved</strong>.</p>
+                    <p>You can now log in and start accepting booking requests.</p>
+                    <p>Welcome to the FixIt Nepal team!</p>
+                ";
+                await _emailService.SendEmailAsync(providerUser.Email, subject, body);
+            }
+
             return RedirectToAction(nameof(VerifyProviders));
         }
 
@@ -126,6 +147,21 @@ namespace FixItNepal.Controllers
 
             _context.Update(provider);
             await _context.SaveChangesAsync();
+
+            // Send Email to Provider
+            var providerUser = await _userManager.FindByIdAsync(provider.UserId);
+            if (providerUser != null)
+            {
+                var subject = "Account Verification Update - FixIt Nepal";
+                var body = $@"
+                    <h2>Account Verification Update</h2>
+                    <p>Hello {providerUser.FullName},</p>
+                    <p>We have reviewed your application and unfortunately, it has been <strong>Rejected</strong> at this time.</p>
+                    <p><strong>Reason:</strong> {rejectionReason}</p>
+                    <p>Please address the reason above and update your profile or documents for re-verification.</p>
+                ";
+                await _emailService.SendEmailAsync(providerUser.Email, subject, body);
+            }
 
             return RedirectToAction(nameof(VerifyProviders));
         }
@@ -154,6 +190,13 @@ namespace FixItNepal.Controllers
                 if (user.UserName == User.Identity.Name) continue;
 
                 if (!string.IsNullOrEmpty(role) && !roles.Contains(role)) continue;
+                
+                string providerStatus = null;
+                if (roles.Contains("ServiceProvider"))
+                {
+                    var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == user.Id);
+                    providerStatus = provider?.Status.ToString();
+                }
 
                 userViewModels.Add(new UserManagementViewModel
                 {
@@ -163,7 +206,8 @@ namespace FixItNepal.Controllers
                     PhoneNumber = user.PhoneNumber,
                     Role = string.Join(", ", roles),
                     IsActive = user.IsActive,
-                    ProfilePicture = user.ProfilePicture
+                    ProfilePicture = user.ProfilePicture,
+                    ProviderStatus = providerStatus
                 });
             }
 

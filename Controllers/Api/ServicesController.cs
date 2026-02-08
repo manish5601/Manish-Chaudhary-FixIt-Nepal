@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FixItNepal.Controllers.Api
 {
-    [Route("api/[controller]")]
+    [Route("api/services")]
     [ApiController]
     public class ServicesController : ControllerBase
     {
@@ -48,6 +48,16 @@ namespace FixItNepal.Controllers.Api
                 .ToListAsync();
 
             return Ok(providers);
+        }
+        // GET: api/services/items
+        [HttpGet("items")]
+        public async Task<IActionResult> GetServiceItems()
+        {
+            var items = await _context.ServiceItems
+                                 .Where(i => i.IsActive)
+                                 .Select(i => new { i.Id, i.Name, i.Description, i.BasePrice, Category = i.ServiceCategory.Name })
+                                 .ToListAsync();
+            return Ok(items);
         }
     }
 }

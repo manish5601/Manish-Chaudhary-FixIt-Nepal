@@ -16,5 +16,7 @@ namespace FixItNepal.Models
         public string? IconPath { get; set; }
 
         public bool IsActive { get; set; } = true;
+        
+        public ICollection<ServiceItem>? ServiceItems { get; set; }
     }
 }

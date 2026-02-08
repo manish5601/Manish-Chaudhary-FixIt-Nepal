@@ -24,5 +24,8 @@ namespace FixItNepal.ViewModels
 
         [Display(Name = "Profile Picture")]
         public string? ProfilePicture { get; set; }
+
+        [Display(Name = "Upload Profile Picture")]
+        public IFormFile? ProfileImage { get; set; }
     }
 }

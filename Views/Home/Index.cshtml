@@ -12,22 +12,28 @@
                     <h1 class="display-3 fw-bold mb-4 text-white">Fix Your Home <span class="text-primary">Hassle Free</span></h1>
                     <p class="lead text-light mb-5 opacity-75">Professional services at your doorstep. From plumbing to electrical repairs, we've got you covered with trusted experts.</p>
                     
-                    <form action="@Url.Action("Search", "Home")" method="get" class="card shadow-lg border-0 p-2 mx-auto" style="max-width: 600px;">
-                        <div class="d-flex">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-0"><i class="bi bi-search text-secondary"></i></span>
-                                <input class="form-control border-0 shadow-none ps-0" type="search" name="query" placeholder="What needs fixing today?" aria-label="Search">
-                                <button class="btn btn-primary rounded-3 px-4" type="submit">Search</button>
+                    @if (!User.IsInRole("Admin") && !User.IsInRole("ServiceProvider"))
+                    {
+                        <form action="@Url.Action("Search", "Home")" method="get" class="card shadow-lg border-0 p-2 mx-auto" style="max-width: 600px;">
+                            <div class="d-flex">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-0"><i class="bi bi-search text-secondary"></i></span>
+                                    <input class="form-control border-0 shadow-none ps-0" type="search" name="query" placeholder="What needs fixing today?" aria-label="Search">
+                                    <button class="btn btn-primary rounded-3 px-4" type="submit">Search</button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    }
 
-                    <div class="mt-4 pt-2">
-                        <small class="text-light fw-bold me-2">Popular:</small>
-                        <a href="@Url.Action("Search", "Home", new { query = "Plumbing" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Plumbing</a>
-                        <a href="@Url.Action("Search", "Home", new { query = "Electrical" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Electrical</a>
-                        <a href="@Url.Action("Search", "Home", new { query = "Cleaning" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Cleaning</a>
-                    </div>
+                    @if (!User.IsInRole("Admin") && !User.IsInRole("ServiceProvider"))
+                    {
+                        <div class="mt-4 pt-2">
+                            <small class="text-light fw-bold me-2">Popular:</small>
+                            <a href="@Url.Action("Search", "Home", new { query = "Plumbing" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Plumbing</a>
+                            <a href="@Url.Action("Search", "Home", new { query = "Electrical" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Electrical</a>
+                            <a href="@Url.Action("Search", "Home", new { query = "Cleaning" })" class="badge bg-white bg-opacity-10 text-white text-decoration-none mx-1 hover-primary border border-white border-opacity-25">Cleaning</a>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -100,7 +106,10 @@
                         </div>
                         <h4 class="card-title fw-bold mb-3">@category.Name</h4>
                         <p class="card-text text-secondary mb-4">@category.Description</p>
-                        <a href="@Url.Action("Search", "Home", new { categoryId = category.Id })" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
+                        @if (!User.IsInRole("Admin") && !User.IsInRole("ServiceProvider"))
+                        {
+                            <a href="@Url.Action("Search", "Home", new { categoryId = category.Id })" class="btn btn-outline-primary rounded-pill px-4">Explore Services</a>
+                        }
                     </div>
                 </div>
             </div>

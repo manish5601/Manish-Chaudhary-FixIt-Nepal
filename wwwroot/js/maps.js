@@ -112,7 +112,7 @@ class GoogleMapService {
                                 <span>${p.rating > 0 ? p.rating.toFixed(1) : 'New'}</span>
                             </div>
                             <!-- <a href="/Customer/Book/${p.id}" class="btn btn-sm btn-outline-primary w-100">Book Now</a> -->
-                            <button class="btn btn-sm btn-secondary w-100" disabled>Booking Coming Soon</button>
+                            <a href="/Home/ProviderDetails/${p.id}" class="btn btn-sm btn-primary w-100">Book Now</a>
                         </div>
                     `;
                     this.addMarker(p.lat, p.lng, p.name, content);

@@ -66,6 +66,20 @@ namespace FixItNepal.Controllers
                 user.Address = model.Address;
                 await _userManager.UpdateAsync(user);
 
+                // Image Upload
+                if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles");
+                    Directory.CreateDirectory(uploadsFolder);
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ProfileImage.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfileImage.CopyToAsync(fileStream);
+                    }
+                    user.ProfilePicture = uniqueFileName;
+                }
+
                 // Update Customer Info
                 customer.PreferredLocation = model.PreferredLocation;
                 _context.Update(customer);

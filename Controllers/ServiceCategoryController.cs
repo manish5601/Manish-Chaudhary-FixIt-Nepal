@@ -33,6 +33,17 @@ namespace FixItNepal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,IconPath,IsActive")] ServiceCategory serviceCategory)
         {
+            // Set default icon if not provided
+            if (string.IsNullOrEmpty(serviceCategory.IconPath))
+            {
+                serviceCategory.IconPath = "bi-tools";
+                // Clear validation error for IconPath if it exists (since it's now set)
+                if (ModelState.ContainsKey("IconPath"))
+                {
+                    ModelState.Remove("IconPath");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(serviceCategory);

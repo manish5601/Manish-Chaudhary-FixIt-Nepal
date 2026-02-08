@@ -15,8 +15,8 @@
                 <div class="card-body">
                     <form method="get" action="@Url.Action("Search", "Home")">
                         <input type="hidden" name="query" value="@ViewBag.Query" />
-                        <input type="hidden" name="lat" id="lat" />
-                        <input type="hidden" name="lng" id="lng" />
+                        <input type="hidden" name="lat" id="lat" value="@ViewBag.Lat" />
+                        <input type="hidden" name="lng" id="lng" value="@ViewBag.Lng" />
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-secondary">Category</label>
@@ -40,8 +40,8 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-secondary">Distance (km)</label>
-                            <input type="range" class="form-range" min="1" max="50" step="1" id="distanceRange" name="maxDistanceKm" value="10" oninput="document.getElementById('distVal').innerText = this.value + ' km'">
-                            <span id="distVal" class="small text-muted">10 km</span>
+                            <input type="range" class="form-range" min="1" max="50" step="1" id="distanceRange" name="maxDistanceKm" value="@(ViewBag.MaxDistance ?? 10)" oninput="document.getElementById('distVal').innerText = this.value + ' km'">
+                            <span id="distVal" class="small text-muted">@(ViewBag.MaxDistance ?? 10) km</span>
                         </div>
                         
                          <button type="button" class="btn btn-outline-primary w-100 mb-2" id="useLocBtn">
@@ -110,7 +110,7 @@
                                 </div>
                                 <div class="card-footer bg-white border-0 pt-0 pb-3">
                                     <div class="d-grid">
-                                        <a href="/Customer/Book/@item.Id" class="btn btn-outline-primary rounded-pill">Book Service</a>
+                                        <a href="@Url.Action("ProviderDetails", "Home", new { id = item.Id })" class="btn btn-outline-primary rounded-pill">View Services & Book</a>
                                     </div>
                                 </div>
                             </div>

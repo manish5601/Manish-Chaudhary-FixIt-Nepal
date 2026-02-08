@@ -20,7 +20,7 @@
                         </div>
                     }
 
-                    <form asp-action="Profile" method="post">
+                    <form asp-action="Profile" method="post" enctype="multipart/form-data">
                         <div class="row">
                             <!-- Left Column: Avatar & Summary -->
                             <div class="col-md-4 text-center border-end">
@@ -52,6 +52,11 @@
                                         <span asp-validation-for="FullName" class="text-danger small"></span>
                                     </div>
                                     <div class="col-md-6">
+                                        <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
+                                        <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                                        <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6">
                                         <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
                                         <input asp-for="PhoneNumber" class="form-control" />
                                         <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
@@ -63,7 +68,7 @@
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="PreferredLocation" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="PreferredLocation" class="form-control" placeholder="E.g. Near Thamel" />
+                                        <input asp-for="PreferredLocation" class="form-control" placeholder="E.g. Near Biratnagar" />
                                         <div class="form-text small">This helps us recommend providers near you.</div>
                                     </div>
                                 </div>

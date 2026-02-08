@@ -1,0 +1,82 @@
+@model FixItNepal.Models.ServiceProvider
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Provider Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-0">
+                <div class="card-body text-center p-4">
+                    @if (!string.IsNullOrEmpty(Model.User.ProfilePicture))
+                    {
+                        <img src="~/uploads/profiles/@Model.User.ProfilePicture" class="rounded-circle mb-3 shadow" style="width: 150px; height: 150px; object-fit: cover;" alt="@Model.User.FullName">
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person-fill display-1 text-secondary"></i>
+                        </div>
+                    }
+                    <h3 class="fw-bold">@Model.User.FullName</h3>
+                    <p class="text-primary fw-bold mb-1">@Model.ServiceCategory.Name Specialist</p>
+                    <div class="text-warning mb-2">
+                        @for(int i=0; i<5; i++) {
+                            if(i < Math.Round(Model.AverageRating)) { <i class="bi bi-star-fill"></i> }
+                            else { <i class="bi bi-star"></i> }
+                        }
+                        <span class="text-muted small">(@Model.TotalReviews reviews)</span>
+                    </div>
+                    <hr>
+                    <div class="text-start">
+                        <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i>@(Model.Address ?? "Kathmandu, Nepal")</p>
+                        <p class="mb-2"><i class="bi bi-briefcase me-2 text-primary"></i>@Model.ExperienceYears Years Experience</p>
+                        <p class="mb-0"><i class="bi bi-check-circle me-2 text-primary"></i>Verified Professional</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services & Bio -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3">About</h4>
+                    <p class="text-secondary">@Model.Skills</p>
+                    @if(!string.IsNullOrEmpty(Model.ServiceAreas))
+                    {
+                        <p class="mb-0"><strong>Service Areas:</strong> @Model.ServiceAreas</p>
+                    }
+                </div>
+            </div>
+
+            <h4 class="fw-bold mb-3">Available Services</h4>
+            <div class="row g-3">
+                @foreach(var service in ViewBag.Services as List<FixItNepal.Models.ServiceItem>)
+                {
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm hover-shadow">
+                            <div class="card-body">
+                                <h5 class="fw-bold">@service.Name</h5>
+                                <p class="text-muted small line-clamp-2">@service.Description</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="text-primary fw-bold">NPR @service.BasePrice</span>
+                                    <a asp-controller="Booking" asp-action="Create" 
+                                       asp-route-serviceId="@service.Id" 
+                                       asp-route-providerId="@Model.Id" 
+                                       class="btn btn-sm btn-primary rounded-pill px-3">
+                                        Book Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if((ViewBag.Services as List<FixItNepal.Models.ServiceItem>).Count == 0)
+                {
+                    <div class="col-12">
+                        <div class="alert alert-warning">This provider has no services listed at the moment.</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

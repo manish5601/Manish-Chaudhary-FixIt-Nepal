@@ -24,12 +24,7 @@
                             <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="IconPath" class="form-label">Icon Class (Bootstrap Icons)</label>
-                            <input asp-for="IconPath" class="form-control" placeholder="bi bi-wrench" />
-                            <span asp-validation-for="IconPath" class="text-danger"></span>
-                            <small class="text-muted">Use Bootstrap Icons classes e.g. 'bi bi-wrench'</small>
-                        </div>
+
                         <div class="mb-4 form-check">
                             <label class="form-check-label">
                                 <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)

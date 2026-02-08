@@ -1,0 +1,57 @@
+@model IEnumerable<FixItNepal.Models.Notification>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-bell me-2 text-primary"></i>Notifications
+        </h2>
+        @if (Model.Any(n => !n.IsRead))
+        {
+            <form asp-action="MarkAllAsRead" method="post">
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-check-all me-1"></i>Mark all as read
+                </button>
+            </form>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-light text-center border">
+            <p class="mb-0 text-muted">You have no notifications.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list-group shadow-sm">
+            @foreach (var item in Model)
+            {
+                string redirectUrl = "#";
+                if (item.Message.Contains("Booking"))
+                {
+                     // Try to extract Booking ID or just redirect to MyBookings
+                     // Since we might not have RelatedEntityId reliably populated for old notifications, we'll default to My Bookings or specific details if we can parse it.
+                     // A safer bet without reliable RelatedEntityId is MyBookings
+                     redirectUrl = Url.Action("MyBookings", "Booking");
+                }
+                
+                // If RelatedEntityId is available (assuming it was added to model, checking file...)
+                // Checking Model first...
+                
+                <a href="@Url.Action("ReadAndRedirect", "Notification", new { id = item.Id, url = redirectUrl })" class="list-group-item list-group-item-action @(item.IsRead ? "" : "bg-light") p-4 border-0 border-bottom text-decoration-none">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h5 class="mb-1 fw-bold @(item.IsRead ? "text-dark" : "text-primary")">
+                            @item.Title
+                            @if (!item.IsRead)
+                            {
+                                <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6em;">NEW</span>
+                            }
+                        </h5>
+                        <small class="text-muted">@item.CreatedAt.ToShortDateString()</small>
+                    </div>
+                    <p class="mb-1 text-secondary">@item.Message</p>
+                </a>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,57 @@
+@model IEnumerable<FixItNepal.Models.ServiceCategory>
+@{
+    ViewData["Title"] = "Our Services";
+}
+
+<div class="container-fluid px-0 mb-5">
+    <div class="position-relative d-flex align-items-center justify-content-center text-center" style="min-height: 400px; background-image: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1581578731117-104f8a33837d?auto=format&fit=crop&q=80'); background-size: cover; background-position: center;">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-4 text-white">Our Services</h1>
+            <p class="lead text-light mb-0 opacity-75">Explore our wide range of professional home services</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4 justify-content-center">
+        @foreach (var category in Model)
+        {
+            <div class="col-md-4 col-lg-3">
+                 <div class="card h-100 text-center p-4 hover-shadow transition-all border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-4" style="width: 80px; height: 80px;">
+                             @if (!string.IsNullOrEmpty(category.IconPath) && !category.IconPath.StartsWith("bi-")) 
+                             {
+                                 // If it's a file path
+                                 <img src="~/uploads/categories/@category.IconPath" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+                             }
+                             else
+                             {
+                                 // If it's a bootstrap icon class or empty
+                                <i class="bi @(string.IsNullOrEmpty(category.IconPath) ? "bi-tools" : category.IconPath) fs-1"></i>
+                             }
+                        </div>
+                        <h4 class="card-title fw-bold mb-3">@category.Name</h4>
+                        <p class="card-text text-secondary mb-4 small">
+                            @(category.ServiceItems?.Count ?? 0) services available
+                        </p>
+                        @if (!User.IsInRole("Admin") && !User.IsInRole("ServiceProvider"))
+                        {
+                            <a href="/Home/Search?categoryId=@category.Id" class="btn btn-outline-primary rounded-pill px-4 w-100">Explore</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>

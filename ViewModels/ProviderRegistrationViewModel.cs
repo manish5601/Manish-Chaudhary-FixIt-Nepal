@@ -50,9 +50,9 @@ namespace FixItNepal.ViewModels
         public string? Skills { get; set; }
 
         // Document Upload
-        [Required(ErrorMessage = "Please upload your Citizenship or National ID")]
+        // [Required(ErrorMessage = "Please upload your Citizenship or National ID")]
         [Display(Name = "Identification Document (PDF/Image)")]
-        public IFormFile IdentificationDocument { get; set; }
+        public IFormFile? IdentificationDocument { get; set; }
 
         [Display(Name = "Profile Picture")]
         public IFormFile? ProfileImage { get; set; }

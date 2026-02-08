@@ -1,0 +1,152 @@
+@model FixItNepal.Models.Booking
+@{
+    ViewData["Title"] = "Booking Details";
+    var isProvider = (bool)ViewBag.IsProvider;
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Booking Details</h2>
+        <a asp-action="MyBookings" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Back to List</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <!-- Booking Info -->
+             <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Service Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Service Name</div>
+                        <div class="col-md-8 fw-bold">@Model.ServiceItem?.Name</div>
+                    </div>
+                     <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Date</div>
+                        <div class="col-md-8">@Model.BookingDate.ToLongDateString()</div>
+                    </div>
+                     <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Time Slot</div>
+                        <div class="col-md-8">@Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")</div>
+                    </div>
+                     <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Total Price</div>
+                        <div class="col-md-8 text-primary fw-bold">Rs. @Model.TotalPrice</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Status</div>
+                        <div class="col-md-8">
+                             @switch (Model.Status)
+                            {
+                                case FixItNepal.Models.BookingStatus.Pending:
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    break;
+                                case FixItNepal.Models.BookingStatus.Confirmed:
+                                    <span class="badge bg-success">Confirmed</span>
+                                    break;
+                                case FixItNepal.Models.BookingStatus.Rejected:
+                                    <span class="badge bg-danger">Rejected</span>
+                                    break;
+                                case FixItNepal.Models.BookingStatus.Cancelled:
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                    break;
+                                case FixItNepal.Models.BookingStatus.Completed:
+                                    <span class="badge bg-primary">Completed</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                         <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Notes</div>
+                            <div class="col-md-8">@Model.Notes</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Customer Actions (Cancellation) -->
+            @if (!isProvider && Model.Status == FixItNepal.Models.BookingStatus.Pending)
+            {
+               <form asp-action="UpdateStatus" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="status" value="Cancelled" />
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure?')"><i class="bi bi-x-circle me-2"></i>Cancel Booking</button>
+                </form>
+            }
+             else if (isProvider && Model.Status == FixItNepal.Models.BookingStatus.Pending)
+            {
+                <div class="d-flex gap-2">
+                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="status" value="Confirmed" />
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-2"></i>Accept Booking</button>
+                    </form>
+                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="status" value="Rejected" />
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-x-lg me-2"></i>Reject Booking</button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <!-- Other Party Profile -->
+             <div class="card shadow-sm border-0">
+                <div class="card-body text-center p-4">
+                    @if (isProvider)
+                    {
+                         <h5 class="fw-bold mb-4">Customer Details</h5>
+                         @if (!string.IsNullOrEmpty(Model.Customer?.User?.ProfilePicture))
+                        {
+                            <img src="~/uploads/profiles/@Model.Customer.User.ProfilePicture" class="rounded-circle mb-3 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
+                        }
+                        else
+                        {
+                             <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center mx-auto mb-3 shadow-sm" style="width: 100px; height: 100px; font-size: 2rem;">
+                                @Model.Customer?.User?.FullName?.Substring(0, 1).ToUpper()
+                            </div>
+                        }
+                        
+                         <h5 class="fw-bold">@Model.Customer?.User?.FullName</h5>
+                         <p class="text-muted"><i class="bi bi-envelope me-2"></i>@Model.Customer?.User?.Email</p>
+                         
+                         <hr />
+                         <div class="text-start">
+                             <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i><strong>Phone:</strong> @(Model.CustomerPhone ?? Model.Customer?.User?.PhoneNumber ?? "N/A")</p>
+                             <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i><strong>Address:</strong> @(Model.CustomerAddress ?? Model.Customer?.PreferredLocation ?? "N/A")</p>
+                         </div>
+                    }
+                    else
+                    {
+                         <h5 class="fw-bold mb-4">Provider Details</h5>
+                         @if (!string.IsNullOrEmpty(Model.ServiceProvider?.User?.ProfilePicture))
+                        {
+                             <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId">
+                                <img src="~/uploads/profiles/@Model.ServiceProvider.User.ProfilePicture" class="rounded-circle mb-3 shadow-sm hover-shadow" style="width: 100px; height: 100px; object-fit: cover;">
+                             </a>
+                        }
+                        else
+                        {
+                             <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="text-decoration-none">
+                                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center mx-auto mb-3 shadow-sm hover-shadow" style="width: 100px; height: 100px; font-size: 2rem;">
+                                    @Model.ServiceProvider?.User?.FullName?.Substring(0, 1).ToUpper()
+                                </div>
+                             </a>
+                        }
+                        
+                         <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="text-decoration-none text-dark">
+                             <h5 class="fw-bold hover-primary">@Model.ServiceProvider?.User?.FullName</h5>
+                         </a>
+                         <p class="text-muted mb-2">@Model.ServiceProvider?.ServiceCategory?.Name Specialst</p>
+                         
+                         <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="btn btn-outline-primary btn-sm rounded-pill mt-2">View Profile</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

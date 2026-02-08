@@ -1,0 +1,121 @@
+@model IEnumerable<FixItNepal.Models.Booking>
+
+<div class="container py-5">
+    <h2 class="mb-4 fw-bold">
+        <i class="bi bi-journal-text me-2 text-primary"></i>My Bookings
+    </h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            <h4>No bookings found.</h4>
+            <p>You haven't made or received any bookings yet.</p>
+            <a href="/" class="btn btn-primary mt-2">Browse Services</a>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="py-3 ps-4">Date & Time</th>
+                                <th class="py-3">Service</th>
+                                <th class="py-3">@(ViewBag.IsProvider ? "Customer" : "Provider")</th>
+                                <th class="py-3">Status</th>
+                                <th class="py-3 text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">@item.BookingDate.ToShortDateString()</div>
+                                        <div class="text-muted small">@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">
+                                            @item.ServiceItem?.Name
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="ms-2">
+                                                <div class="fw-bold">
+                                                    @(ViewBag.IsProvider ? item.Customer?.User?.FullName : item.ServiceProvider?.User?.FullName)
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @if (ViewBag.IsProvider)
+                                                    {
+                                                        <div><i class="bi bi-geo-alt me-1"></i>@(item.CustomerAddress ?? item.Customer?.PreferredLocation ?? "N/A")</div>
+                                                        <div><i class="bi bi-telephone me-1"></i>@(item.CustomerPhone ?? item.Customer?.User?.PhoneNumber ?? "N/A")</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        @(item.Customer?.PreferredLocation ?? "")
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @switch (item.Status)
+                                        {
+                                            case FixItNepal.Models.BookingStatus.Pending:
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.Confirmed:
+                                                <span class="badge bg-success">Confirmed</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.Rejected:
+                                                <span class="badge bg-danger">Rejected</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.Cancelled:
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.Completed:
+                                                <span class="badge bg-primary">Completed</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i> Details</a>
+                                        
+                                        @if (item.Status == FixItNepal.Models.BookingStatus.Pending)
+                                        {
+                                            @if (ViewBag.IsProvider)
+                                            {
+                                                <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="status" value="Confirmed" />
+                                                    <button type="submit" class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i></button>
+                                                </form>
+                                                <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="status" value="Rejected" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <input type="hidden" name="status" value="Cancelled" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i></button>
+                                                </form>
+                                            }
+                                        }
+                                        @* Cancel button hidden for confirmed customer bookings as per requirement *@
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

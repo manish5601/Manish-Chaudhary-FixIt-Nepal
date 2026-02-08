@@ -90,6 +90,24 @@
                                         {
                                             <span class="badge bg-secondary-subtle text-secondary rounded-pill">Inactive</span>
                                         }
+
+                                        @if (!string.IsNullOrEmpty(user.ProviderStatus))
+                                        {
+                                             <div class="mt-1">
+                                                 @if (user.ProviderStatus == "Approved")
+                                                 {
+                                                     <span class="badge bg-success" style="font-size: 0.7em;">Verified</span>
+                                                 }
+                                                 else if (user.ProviderStatus == "Pending")
+                                                 {
+                                                     <span class="badge bg-warning text-dark" style="font-size: 0.7em;">Pending</span>
+                                                 }
+                                                 else
+                                                 {
+                                                     <span class="badge bg-danger" style="font-size: 0.7em;">Rejected</span>
+                                                 }
+                                             </div>
+                                        }
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
@@ -109,32 +127,9 @@
                                                 }
                                             </form>
 
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@user.Id" title="Delete">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('@user.Id', '@user.FullName')" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal fade" id="deleteModal-@user.Id" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Confirm Delete</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body text-start text-wrap">
-                                                        Are you sure you want to permanently delete <strong>@user.FullName</strong>?<br/>
-                                                        <small class="text-danger">This action cannot be undone.</small>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <form asp-action="DeleteUser" method="post">
-                                                            <input type="hidden" name="id" value="@user.Id" />
-                                                            <button type="submit" class="btn btn-danger">Delete User</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -156,12 +151,42 @@
     </div>
 </div>
 
+<!-- Global Delete Modal (Moved outside table to prevent blinking/overlay issues) -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-start text-wrap">
+                Are you sure you want to permanently delete <strong id="deleteUserName"></strong>?<br/>
+                <small class="text-danger">This action cannot be undone.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="DeleteUser" method="post">
+                    <input type="hidden" id="deleteUserId" name="id" value="" />
+                    <button type="submit" class="btn btn-danger">Delete User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // Ensure options in select work despite possible HTML escaping in example
-        // (Cleaned up the < !option > trick used in generation)
         document.querySelectorAll('option').forEach(o => {
             if (o.innerText.startsWith('<!')) o.innerHTML = o.innerText.replace('<!', '<').replace('>', '>');
         });
+
+        // Function to handle delete modal
+        function confirmDelete(userId, userName) {
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserName').textContent = userName;
+            var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            myModal.show();
+        }
     </script>
 }

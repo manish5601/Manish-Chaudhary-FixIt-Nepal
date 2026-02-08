@@ -58,8 +58,31 @@ namespace FixItNepal.Controllers
             ViewBag.Query = query;
             ViewBag.CategoryId = categoryId;
             ViewBag.MinRating = minRating;
+            ViewBag.Lat = lat;
+            ViewBag.Lng = lng;
+            ViewBag.MaxDistance = maxDistanceKm;
 
             return View(providers);
+        }
+
+        public async Task<IActionResult> ProviderDetails(int id)
+        {
+            var provider = await _context.ServiceProviders
+                .Include(p => p.User)
+                .Include(p => p.ServiceCategory)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (provider == null) return NotFound();
+
+            // Fetch services available in this provider's category
+            // In a real app, a provider might only offer specific services, but for now we assume they offer all services in their category.
+            var services = await _context.ServiceItems
+                .Where(s => s.ServiceCategoryId == provider.ServiceCategoryId && s.IsActive)
+                .ToListAsync();
+
+            ViewBag.Services = services;
+
+            return View(provider);
         }
 
         private double GetDistance(double lat1, double lon1, double lat2, double lon2)
@@ -93,6 +116,15 @@ namespace FixItNepal.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        public async Task<IActionResult> Services()
+        {
+             var categories = await _context.ServiceCategories
+                 .Include(c => c.ServiceItems)
+                 .Where(c => c.IsActive)
+                 .ToListAsync();
+            return View(categories);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

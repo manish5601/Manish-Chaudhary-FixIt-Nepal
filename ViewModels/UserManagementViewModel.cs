@@ -9,5 +9,6 @@ namespace FixItNepal.ViewModels
         public string Role { get; set; }
         public bool IsActive { get; set; }
         public string? ProfilePicture { get; set; }
+        public string? ProviderStatus { get; set; }
     }
 }

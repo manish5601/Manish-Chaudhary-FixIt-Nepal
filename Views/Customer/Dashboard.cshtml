@@ -2,30 +2,55 @@
     ViewData["Title"] = "Customer Dashboard";
 }
 
-<div class="text-center mt-5">
-    <h1 class="text-primary">Customer Dashboard</h1>
-    <p>Find services, manage your bookings, and view your history.</p>
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold">Welcome Back!</h2>
+            <p class="text-muted">Manage your home service requests.</p>
+        </div>
+    </div>
 
-    <div class="row mt-4">
+    <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card p-3 text-center">
-                <h5>Book a Service</h5>
-                <p>Find and book a professional</p>
-                <a href="#" class="btn btn-primary">Book Now</a>
+            <div class="card shadow-sm border-0 h-100 bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50">Book Services</h6>
+                            <h3 class="fw-bold mb-0">Find Help</h3>
+                        </div>
+                        <i class="bi bi-search fs-1 opacity-50"></i>
+                    </div>
+                    <a asp-controller="Home" asp-action="Services" class="btn btn-light text-primary w-100 mt-4 rounded-pill">Browse Services</a>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card p-3 text-center">
-                <h5>My Bookings</h5>
-                <p>View current and past bookings</p>
-                <a href="#" class="btn btn-outline-primary">View</a>
+             <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">My Bookings</h6>
+                            <h3 class="fw-bold mb-0">Manage</h3>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1 text-primary opacity-50"></i>
+                    </div>
+                    <a asp-controller="Booking" asp-action="MyBookings" class="btn btn-outline-primary w-100 mt-4 rounded-pill">View History</a>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card p-3 text-center">
-                <h5>Profile</h5>
-                <p>Update your details</p>
-                <a href="#" class="btn btn-outline-primary">Edit</a>
+             <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">Profile</h6>
+                            <h3 class="fw-bold mb-0">Settings</h3>
+                        </div>
+                        <i class="bi bi-person-gear fs-1 text-primary opacity-50"></i>
+                    </div>
+                    <a asp-controller="Customer" asp-action="Profile" class="btn btn-outline-primary w-100 mt-4 rounded-pill">Edit Profile</a>
+                </div>
             </div>
         </div>
     </div>
