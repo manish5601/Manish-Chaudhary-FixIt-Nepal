@@ -59,6 +59,8 @@ namespace FixItNepal.Controllers
                 ServiceAreas = provider.ServiceAreas,
                 Skills = provider.Skills,
                 Status = provider.Status,
+                Latitude = provider.Latitude,
+                Longitude = provider.Longitude,
                 Documents = provider.Documents.ToList(),
                 Categories = _context.ServiceCategories
                     .Where(c => c.IsActive)
@@ -112,6 +114,8 @@ namespace FixItNepal.Controllers
                 provider.ServiceAreas = model.ServiceAreas;
                 provider.Skills = model.Skills;
                 provider.ServiceCategoryId = model.ServiceCategoryId;
+                provider.Latitude = model.Latitude;
+                provider.Longitude = model.Longitude;
 
                 _context.Update(provider);
                 await _context.SaveChangesAsync();

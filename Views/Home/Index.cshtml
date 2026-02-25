@@ -213,6 +213,11 @@
                 if (currentLat && currentLng) {
                     params.lat = currentLat;
                     params.lng = currentLng;
+                } else if (mapService.map) {
+                     // Fallback to map center if user hasn't selected a location
+                    const center = mapService.map.getCenter();
+                    params.lat = center.lat();
+                    params.lng = center.lng();
                 }
                 
                 mapService.loadProviders('/api/Maps/providers', params);

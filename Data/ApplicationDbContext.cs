@@ -19,6 +19,8 @@ namespace FixItNepal.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ProviderAvailability> ProviderAvailabilities { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Dispute> Disputes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -32,13 +34,15 @@ namespace FixItNepal.Data
             builder.Entity<Booking>().ToTable("Bookings");
             builder.Entity<Notification>().ToTable("Notifications");
             builder.Entity<ProviderAvailability>().ToTable("ProviderAvailabilities");
+            builder.Entity<Review>().ToTable("Reviews");
+            builder.Entity<Dispute>().ToTable("Disputes");
 
             // Configure Booking Relationships (Prevent Cascade Cycles)
             builder.Entity<Booking>()
                 .HasOne(b => b.Customer)
                 .WithMany()
                 .HasForeignKey(b => b.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict); // Do not delete booking if customer is deleted (preserve history)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Booking>()
                 .HasOne(b => b.ServiceProvider)
@@ -50,6 +54,38 @@ namespace FixItNepal.Data
                 .HasOne(b => b.ServiceItem)
                 .WithMany()
                 .HasForeignKey(b => b.ServiceItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review Relationships (1-to-1 with Booking)
+            builder.Entity<Booking>()
+                .HasOne(b => b.Review)
+                .WithOne(r => r.Booking)
+                .HasForeignKey<Review>(r => r.BookingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Customer)
+                .WithMany()
+                .HasForeignKey(r => r.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.ServiceProvider)
+                .WithMany()
+                .HasForeignKey(r => r.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Dispute Relationships
+            builder.Entity<Dispute>()
+                .HasOne(d => d.Booking)
+                .WithMany()
+                .HasForeignKey(d => d.BookingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Dispute>()
+                .HasOne(d => d.RaisedBy)
+                .WithMany()
+                .HasForeignKey(d => d.RaisedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure Decimal Precision

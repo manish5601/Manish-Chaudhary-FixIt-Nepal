@@ -47,6 +47,9 @@ namespace FixItNepal.ViewModels
         [Display(Name = "Service Areas (Comma separated)")]
         public string ServiceAreas { get; set; }
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
         public string? Skills { get; set; }
 
         // Document Upload

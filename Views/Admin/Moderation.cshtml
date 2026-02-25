@@ -1,0 +1,70 @@
+@model IEnumerable<FixItNepal.Models.Review>
+@{
+    ViewData["Title"] = "Content Moderation";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Review Moderation</h1>
+        <span class="badge bg-warning text-dark">@Model.Count() Flagged Items</span>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Provider</th>
+                        <th>Rating/Comment</th>
+                        <th>Flag Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No flagged reviews found.</td>
+                        </tr>
+                    }
+                    @foreach (var review in Model)
+                    {
+                        <tr>
+                            <td>@review.CreatedAt.ToShortDateString()</td>
+                            <td>@review.Customer.User.FullName</td>
+                            <td>@review.ServiceProvider.User.FullName</td>
+                            <td>
+                                <div>
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi bi-star-fill @(i <= review.Rating ? "text-warning" : "text-muted") tiny"></i>
+                                    }
+                                </div>
+                                <div class="small text-truncate" style="max-width: 250px;">@review.Comment</div>
+                            </td>
+                            <td class="small text-danger">@review.AdminNote</td>
+                            <td>
+                                <div class="btn-group">
+                                    <form asp-action="DismissFlag" asp-route-id="@review.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Keep</button>
+                                    </form>
+                                    <form asp-action="DeleteReview" asp-route-id="@review.Id" method="post" class="d-inline ms-1">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this review?')">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tiny { font-size: 0.75rem; }
+</style>

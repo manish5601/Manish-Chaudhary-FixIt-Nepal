@@ -1,0 +1,54 @@
+@model FixItNepal.ViewModels.DisputeViewModel
+@{
+    ViewData["Title"] = "Raise a Dispute";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-4 text-danger">Raise a Dispute</h2>
+                    <div class="alert alert-info border-0 shadow-sm mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        You are raising a dispute regarding the booking for <strong>@Model.ServiceName</strong> with <strong>@Model.PartyName</strong>.
+                    </div>
+
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="BookingId" />
+                        
+                        <div class="mb-4">
+                            <label asp-for="Reason" class="form-label fw-bold">Primary Reason</label>
+                            <select asp-for="Reason" class="form-select">
+                                <option value="">Select a reason...</option>
+                                <option value="Service not provided">Service not provided</option>
+                                <option value="Poor quality of service">Poor quality of service</option>
+                                <option value="Unprofessional behavior">Unprofessional behavior</option>
+                                <option value="Pricing dispute">Pricing dispute</option>
+                                <option value="Cancellation conflict">Cancellation conflict</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="Reason" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-bold">Detailed Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Please provide specific details about the issue..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">Submit Dispute</button>
+                            <a asp-controller="Booking" asp-action="Details" asp-route-id="@Model.BookingId" class="btn btn-link text-muted">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

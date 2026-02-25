@@ -111,6 +111,19 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-2">
+                                            @if (user.Role.Contains("Customer"))
+                                            {
+                                                <a asp-action="ViewCustomerProfile" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            }
+                                            else if (user.Role.Contains("ServiceProvider"))
+                                            {
+                                                <a asp-action="ViewProviderProfile" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            }
+
                                             <form asp-action="ToggleUserStatus" method="post" class="d-inline">
                                                 <input type="hidden" name="id" value="@user.Id" />
                                                 @if (user.IsActive)

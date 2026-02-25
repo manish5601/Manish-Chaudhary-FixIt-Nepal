@@ -33,6 +33,9 @@ namespace FixItNepal.ViewModels
         public int ExperienceYears { get; set; }
 
         public string? ServiceAreas { get; set; }
+
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         
         public string? Skills { get; set; }
 

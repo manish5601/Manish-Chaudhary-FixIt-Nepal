@@ -10,7 +10,8 @@ namespace FixItNepal.Models
         Confirmed,
         Completed,
         Cancelled,
-        Rejected
+        Rejected,
+        AwaitingConfirmation
     }
 
     public class Booking
@@ -54,6 +55,8 @@ namespace FixItNepal.Models
         public string? CustomerPhone { get; set; }
 
         public string? Notes { get; set; }
+        
+        public Review? Review { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

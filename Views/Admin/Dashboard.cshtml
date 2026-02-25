@@ -101,10 +101,9 @@
                     </div>
                 </div>
             </div>
-            
             <!-- Additional Actions Row -->
             <div class="row g-4 mt-1">
-                 <div class="col-md-4">
+                <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 hover-card transition-all">
                         <div class="card-body p-4 text-center">
                             <div class="mb-3">
@@ -113,6 +112,32 @@
                             <h5 class="card-title fw-bold">Service Categories</h5>
                             <p class="card-text text-secondary small mb-4">Organize services into categories (e.g. Plumbing, Electrical).</p>
                             <a asp-controller="ServiceCategory" asp-action="Index" class="btn btn-outline-primary rounded-pill px-4 stretched-link">Manage Categories</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Moderation Card -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-shield-exclamation-fill fs-1 text-warning"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Content Moderation</h5>
+                            <p class="card-text text-secondary small mb-4">Review flagged content and manage community standards.</p>
+                            <a asp-action="Moderation" class="btn btn-outline-warning rounded-pill px-4 stretched-link">Moderation Center</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Disputes Card -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-exclamation-triangle-fill fs-1 text-danger"></i>
+                            </div>
+                            <h5 class="card-title fw-bold">Dispute Management</h5>
+                            <p class="card-text text-secondary small mb-4">Handle conflicts between customers and service providers.</p>
+                            <a asp-action="Disputes" class="btn btn-outline-danger rounded-pill px-4 stretched-link">Resolve Disputes</a>
                         </div>
                     </div>
                 </div>

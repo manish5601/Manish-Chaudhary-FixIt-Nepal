@@ -77,6 +77,99 @@
                     </div>
                 }
             </div>
+            <!-- Reviews Section -->
+            <div class="mt-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Customer Reviews</h4>
+                    <div class="d-flex align-items-center">
+                        <span class="h4 fw-bold text-primary mb-0 me-2">@Model.AverageRating.ToString("0.0")</span>
+                        <div class="text-warning">
+                             @for(int i=1; i<=5; i++) {
+                                if(i <= Math.Round(Model.AverageRating)) { <i class="bi bi-star-fill"></i> }
+                                else { <i class="bi bi-star"></i> }
+                            }
+                        </div>
+                        <span class="text-muted ms-2">(@Model.TotalReviews)</span>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush shadow-sm rounded-4 overflow-hidden">
+                    @if (ViewBag.Reviews != null && (ViewBag.Reviews as List<FixItNepal.Models.Review>).Any())
+                    {
+                        @foreach (var review in ViewBag.Reviews as List<FixItNepal.Models.Review>)
+                        {
+                            <div class="list-group-item p-4 border-0 mb-2 bg-white card shadow-sm">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; font-weight: 600;">
+                                            @review.Customer.User.FullName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">@review.Customer.User.FullName</h6>
+                                            <small class="text-muted">@review.CreatedAt.ToString("MMMM dd, yyyy")</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end">
+                                        <div class="text-warning mb-1">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star-fill @(i <= review.Rating ? "" : "text-muted") tiny"></i>
+                                            }
+                                        </div>
+                                        @if (User.Identity.IsAuthenticated)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="flagReview(@review.Id)">
+                                                <i class="bi bi-flag me-1"></i>Report
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="text-secondary mb-0">@review.Comment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="list-group-item p-5 text-center bg-white card border-0">
+                            <i class="bi bi-chat-left-dots display-4 text-muted mb-3 d-block"></i>
+                            <p class="text-muted mb-0">No reviews yet for this provider.</p>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
+@section Scripts {
+    <script>
+        function flagReview(reviewId) {
+            const reason = prompt("Please provide a reason for flagging this review:");
+            if (reason === null) return;
+            if (reason.trim() === "") {
+                alert("Please provide a reason.");
+                return;
+            }
+
+            fetch(`/api/ReviewApi/flag/${reviewId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(reason)
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Thank you. The review has been flagged for moderation.");
+                    location.reload();
+                } else {
+                    alert("Failed to flag review. Please try again.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+    </script>
+}

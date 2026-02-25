@@ -1,0 +1,117 @@
+@model IEnumerable<FixItNepal.Models.Dispute>
+@{
+    ViewData["Title"] = "My Disputes";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>My Disputes</h2>
+        <a asp-controller="Booking" asp-action="MyBookings" class="btn btn-outline-secondary btn-sm">Back to Bookings</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Service</th>
+                        <th>Raised On</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                                You haven't raised any disputes yet.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var dispute in Model)
+                    {
+                        <tr>
+                            <td>#@dispute.BookingId</td>
+                            <td>@dispute.Booking?.ServiceItem?.Name</td>
+                            <td>@dispute.CreatedAt.ToShortDateString()</td>
+                            <td>
+                                <strong>@dispute.Reason</strong>
+                                <div class="small text-muted text-truncate" style="max-width: 250px;">@dispute.Description</div>
+                            </td>
+                            <td>
+                                <span class="badge @(dispute.Status == FixItNepal.Models.DisputeStatus.Open ? "bg-danger" : 
+                                                   dispute.Status == FixItNepal.Models.DisputeStatus.UnderReview ? "bg-warning text-dark" : 
+                                                   dispute.Status == FixItNepal.Models.DisputeStatus.Resolved ? "bg-success" : "bg-secondary") rounded-pill">
+                                    @dispute.Status
+                                </span>
+                            </td>
+                            <td class="text-end pe-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#viewResolution-@dispute.Id">
+                                    View Detail
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @foreach (var dispute in Model)
+    {
+        <!-- Resolution Modal -->
+        <div class="modal fade" id="viewResolution-@dispute.Id" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header border-0 bg-light">
+                        <h5 class="modal-title fw-bold text-primary">Dispute Summary #@dispute.Id</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-start">
+                        <div class="mb-4">
+                            <h6 class="text-muted small fw-bold text-uppercase border-bottom pb-2 mb-3">Resolution Update</h6>
+                            @if (!string.IsNullOrEmpty(dispute.Resolution))
+                            {
+                                <div class="p-3 bg-success-subtle rounded border-start border-4 border-success">
+                                    <p class="mb-2">@dispute.Resolution</p>
+                                    <div class="small text-muted d-flex align-items-center">
+                                        <i class="bi bi-clock me-1"></i> Resolved on: @dispute.ResolvedAt?.ToShortDateString()
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="p-3 bg-light rounded border-start border-4 border-warning">
+                                    <p class="text-muted italic mb-0">No resolution provided yet. Our admin team is currently reviewing your case. We appreciate your patience.</p>
+                                </div>
+                            }
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="text-muted small fw-bold text-uppercase border-bottom pb-2 mb-3">Original Claim</h6>
+                            <div class="mb-2">
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">Reason: @dispute.Reason</span>
+                            </div>
+                            <p class="small text-dark mb-0">@dispute.Description</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

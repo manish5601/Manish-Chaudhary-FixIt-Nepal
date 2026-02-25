@@ -81,6 +81,7 @@
                                             <li><hr class="dropdown-divider"></li>
                                             
                                             <li><a class="dropdown-item" asp-controller="Booking" asp-action="MyBookings"><i class="bi bi-calendar-check me-2"></i>My Bookings</a></li>
+                                            <li><a class="dropdown-item" asp-controller="Dispute" asp-action="MyDisputes"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>My Disputes</a></li>
 
                                             @if (User.IsInRole("ServiceProvider"))
                                             {

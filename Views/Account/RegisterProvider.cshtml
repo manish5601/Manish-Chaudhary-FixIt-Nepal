@@ -24,6 +24,8 @@
                         </div>
                         <input asp-for="ProfileImage" class="form-control form-control-sm w-50 mx-auto" type="file" accept="image/*" />
                         <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                        <input type="hidden" asp-for="Latitude" />
+                        <input type="hidden" asp-for="Longitude" />
                     </div>
 
                     <div class="row g-3">
@@ -110,4 +112,24 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+    <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&libraries=places"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const addressInput = document.getElementById("Address");
+            const latInput = document.getElementById("Latitude");
+            const lngInput = document.getElementById("Longitude");
+
+            if (google.maps.places) {
+                const autocomplete = new google.maps.places.Autocomplete(addressInput);
+                autocomplete.addListener("place_changed", () => {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        latInput.value = place.geometry.location.lat();
+                        lngInput.value = place.geometry.location.lng();
+                    }
+                });
+            }
+        });
+    </script>
 }

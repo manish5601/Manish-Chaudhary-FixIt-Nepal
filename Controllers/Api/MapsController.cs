@@ -17,7 +17,7 @@ namespace FixItNepal.Controllers.Api
         }
 
         [HttpGet("providers")]
-        public async Task<IActionResult> GetProviders(double? lat, double? lng, double radius = 10, int minRating = 0, int? categoryId = null)
+        public async Task<IActionResult> GetProviders(double? lat, double? lng, double radius = 10, double minRating = 0, int? categoryId = null)
         {
             // Fetch approved providers with valid location
             var query = _context.ServiceProviders
@@ -34,7 +34,7 @@ namespace FixItNepal.Controllers.Api
 
             if (minRating > 0)
             {
-                query = query.Where(p => p.AverageRating >= minRating);
+                query = query.Where(p => p.AverageRating >= (decimal)minRating);
             }
 
             var providers = await query
@@ -76,6 +76,22 @@ namespace FixItNepal.Controllers.Api
         private double ToRadians(double deg)
         {
             return deg * (Math.PI / 180);
+        }
+        [HttpGet("debug-all")]
+        public async Task<IActionResult> GetAllDebug()
+        {
+            var providers = await _context.ServiceProviders
+                .Include(p => p.User)
+                .Select(p => new { 
+                    p.Id, 
+                    Name = p.User.FullName, 
+                    p.Status, 
+                    p.Latitude, 
+                    p.Longitude,
+                    p.Address
+                })
+                .ToListAsync();
+            return Ok(providers);
         }
     }
 }

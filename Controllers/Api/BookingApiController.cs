@@ -94,7 +94,7 @@ namespace FixItNepal.Controllers.Api
                  .Include(b => b.ServiceItem)
                  .FirstOrDefaultAsync(b => b.Id == id);
 
-            if (booking == null) return NotFound();
+            if (booking == null) return NotFound(new { message = "Booking not found" });
 
             // Authorization check
             if (booking.Customer.UserId != userId && booking.ServiceProvider.UserId != userId)
@@ -142,7 +142,7 @@ namespace FixItNepal.Controllers.Api
             if (hasConflict)
             {
                 Console.WriteLine("[DEBUG] CONFLICT DETECTED!");
-                return Conflict("The selected time slot is already booked.");
+                return Conflict(new { message = "The selected time slot is already booked." });
             }
             else 
             {
@@ -240,7 +240,7 @@ namespace FixItNepal.Controllers.Api
                  .Include(b => b.Customer)
                  .FirstOrDefaultAsync(b => b.Id == id);
 
-             if (booking == null) return NotFound();
+             if (booking == null) return NotFound(new { message = "Booking not found" });
 
              // Only provider can accept/reject/complete
              // Customer can cancel

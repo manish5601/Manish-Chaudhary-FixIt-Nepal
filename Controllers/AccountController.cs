@@ -211,7 +211,9 @@ namespace FixItNepal.Controllers
                     Skills = model.Skills,
                     // PricingType = "Hourly", Removed
                     Status = VerificationStatus.Pending,
-                    RegisteredAt = DateTime.UtcNow
+                    RegisteredAt = DateTime.UtcNow,
+                    Latitude = model.Latitude,
+                    Longitude = model.Longitude
                 };
 
                 _context.ServiceProviders.Add(serviceProvider);

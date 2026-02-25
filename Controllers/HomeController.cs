@@ -74,6 +74,15 @@ namespace FixItNepal.Controllers
 
             if (provider == null) return NotFound();
 
+            // Fetch Reviews
+            var reviews = await _context.Reviews
+                .Include(r => r.Customer).ThenInclude(c => c.User)
+                .Where(r => r.ServiceProviderId == id && !r.IsFlagged)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.Reviews = reviews;
+
             // Fetch services available in this provider's category
             // In a real app, a provider might only offer specific services, but for now we assume they offer all services in their category.
             var services = await _context.ServiceItems

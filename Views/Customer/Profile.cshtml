@@ -48,34 +48,46 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="FullName" class="form-control" />
+                                        <input asp-for="FullName" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="FullName" class="text-danger small"></span>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
-                                        <span asp-validation-for="ProfileImage" class="text-danger small"></span>
-                                    </div>
+                                    @if (ViewBag.AdminView != true)
+                                    {
+                                        <div class="col-md-6">
+                                            <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
+                                            <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                                            <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                                        </div>
+                                    }
                                     <div class="col-md-6">
                                         <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="PhoneNumber" class="form-control" />
+                                        <input asp-for="PhoneNumber" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="Address" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="Address" class="form-control" />
+                                        <input asp-for="Address" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="Address" class="text-danger small"></span>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="PreferredLocation" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="PreferredLocation" class="form-control" placeholder="E.g. Near Biratnagar" />
+                                        <input asp-for="PreferredLocation" class="form-control" placeholder="E.g. Near Biratnagar" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <div class="form-text small">This helps us recommend providers near you.</div>
                                     </div>
                                 </div>
 
-                                <div class="mt-5 text-end">
-                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
-                                </div>
+                                @if (ViewBag.AdminView != true)
+                                {
+                                    <div class="mt-5 text-end">
+                                        <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-5 text-end">
+                                        <a asp-controller="Admin" asp-action="UserManagement" class="btn btn-outline-secondary px-4 rounded-pill">Back to Users</a>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </form>

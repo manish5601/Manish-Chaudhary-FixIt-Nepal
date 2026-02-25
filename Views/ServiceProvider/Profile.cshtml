@@ -82,28 +82,34 @@
 
                             <!-- Right Column: Edit Form -->
                             <div class="col-md-8 ps-md-5">
-                                <h5 class="mb-4 text-secondary border-bottom pb-2">Edit Details</h5>
+                                <h5 class="mb-4 text-secondary border-bottom pb-2">@(ViewBag.AdminView == true ? "Profile Details" : "Edit Details")</h5>
                                 
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label asp-for="FullName" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="FullName" class="form-control" />
+                                        <input asp-for="FullName" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="FullName" class="text-danger small"></span>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
-                                        <span asp-validation-for="ProfileImage" class="text-danger small"></span>
-                                    </div>
+                                    @if (ViewBag.AdminView != true)
+                                    {
+                                        <div class="col-md-6">
+                                            <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
+                                            <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                                            <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                                        </div>
+                                    }
                                     <div class="col-md-6">
                                         <label asp-for="PhoneNumber" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="PhoneNumber" class="form-control" />
+                                        <input asp-for="PhoneNumber" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                                     </div>
                                     <div class="col-12">
                                         <label asp-for="Address" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="Address" class="form-control" />
+                                        <input asp-for="Address" class="form-control" id="Address" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="Address" class="text-danger small"></span>
+                                        <input type="hidden" asp-for="Latitude" />
+                                        <input type="hidden" asp-for="Longitude" />
+                                        <div id="locationMap" class="mt-2 rounded border" style="height: 200px;"></div>
                                     </div>
                                     
                                     <div class="col-12 mt-4">
@@ -112,28 +118,44 @@
                                     
                                     <div class="col-md-12 mb-3">
                                         <label asp-for="ServiceCategoryId" class="form-label text-secondary small fw-bold"></label>
-                                        <select asp-for="ServiceCategoryId" asp-items="Model.Categories" class="form-select"></select>
+                                        @if (ViewBag.AdminView == true)
+                                        {
+                                            <input class="form-control" value="@Model.ServiceCategoryName" readonly="readonly" />
+                                        }
+                                        else
+                                        {
+                                            <select asp-for="ServiceCategoryId" asp-items="Model.Categories" class="form-select"></select>
+                                        }
                                         <span asp-validation-for="ServiceCategoryId" class="text-danger small"></span>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label asp-for="ServiceAreas" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="ServiceAreas" class="form-control" placeholder="Locations you cover" />
+                                        <input asp-for="ServiceAreas" class="form-control" placeholder="Locations you cover" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                         <span asp-validation-for="ServiceAreas" class="text-danger small"></span>
                                     </div>
                                     <div class="col-md-6">
                                         <label asp-for="ExperienceYears" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="ExperienceYears" class="form-control" />
+                                        <input asp-for="ExperienceYears" class="form-control" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                     </div>
                                      <div class="col-12">
                                         <label asp-for="Skills" class="form-label text-secondary small fw-bold"></label>
-                                        <input asp-for="Skills" class="form-control" placeholder="Specific skills e.g. Leak detection, Pipe fitting" />
+                                        <input asp-for="Skills" class="form-control" placeholder="Specific skills e.g. Leak detection, Pipe fitting" readonly="@(ViewBag.AdminView == true ? "readonly" : null)" />
                                     </div>
                                 </div>
 
-                                <div class="mt-5 text-end">
-                                    <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
-                                </div>
+                                @if (ViewBag.AdminView != true)
+                                {
+                                    <div class="mt-5 text-end">
+                                        <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-5 text-end">
+                                        <a asp-controller="Admin" asp-action="UserManagement" class="btn btn-outline-secondary px-4 rounded-pill">Back to Users</a>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </form>
@@ -170,5 +192,79 @@
             </div>
 
         </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+    <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&libraries=places"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const addressInput = document.getElementById("Address");
+            const latInput = document.getElementById("Latitude");
+            const lngInput = document.getElementById("Longitude");
+            
+            // Map Setup
+            let map, marker;
+            // Default Kathmandu if no location
+            let initialLat = @(Model.Latitude.HasValue ? Model.Latitude.Value : 27.7172);
+            let initialLng = @(Model.Longitude.HasValue ? Model.Longitude.Value : 85.3240);
+
+            function initMap() {
+                const mapEl = document.getElementById("locationMap");
+                if(!mapEl) return;
+
+                map = new google.maps.Map(mapEl, {
+                    center: { lat: initialLat, lng: initialLng },
+                    zoom: 13
+                });
+
+                marker = new google.maps.Marker({
+                    position: { lat: initialLat, lng: initialLng },
+                    map: map,
+                    draggable: true,
+                    title: "Drag to set location"
+                });
+
+                // Update hidden inputs when marker is dragged
+                marker.addListener("dragend", () => {
+                    const pos = marker.getPosition();
+                    latInput.value = pos.lat();
+                    lngInput.value = pos.lng();
+                });
+
+                // Update marker when map is clicked
+                map.addListener("click", (e) => {
+                    const pos = e.latLng;
+                    marker.setPosition(pos);
+                    latInput.value = pos.lat();
+                    lngInput.value = pos.lng();
+                });
+            }
+
+            if (google.maps.places) {
+                const autocomplete = new google.maps.places.Autocomplete(addressInput);
+                autocomplete.addListener("place_changed", () => {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        const lat = place.geometry.location.lat();
+                        const lng = place.geometry.location.lng();
+                        
+                        latInput.value = lat;
+                        lngInput.value = lng;
+                        
+                        // Update Map
+                        if(map && marker) {
+                            const pos = {lat: lat, lng: lng};
+                            map.setCenter(pos);
+                            marker.setPosition(pos);
+                            map.setZoom(15);
+                        }
+                    }
+                });
+            }
+            
+            initMap();
+        });
+    </script>
+}
     </div>
 </div>

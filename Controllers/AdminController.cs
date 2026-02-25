@@ -260,5 +260,170 @@ namespace FixItNepal.Controllers
 
             return RedirectToAction(nameof(UserManagement));
         }
+
+        // --- Moderation & Disputes ---
+
+        // GET: /Admin/Moderation
+        public async Task<IActionResult> Moderation()
+        {
+            var flaggedReviews = await _context.Reviews
+                .Include(r => r.Customer).ThenInclude(c => c.User)
+                .Include(r => r.ServiceProvider).ThenInclude(p => p.User)
+                .Include(r => r.Booking)
+                .Where(r => r.IsFlagged)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return View(flaggedReviews);
+        }
+
+        // POST: /Admin/DismissFlag/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DismissFlag(int id)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null) return NotFound();
+
+            review.IsFlagged = false;
+            review.AdminNote = "Flag dismissed by admin.";
+            
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Moderation));
+        }
+
+        // POST: /Admin/DeleteReview/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteReview(int id)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null) return NotFound();
+
+            var providerId = review.ServiceProviderId;
+            _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
+
+            // Recalculate Provider Rating
+            var provider = await _context.ServiceProviders.FindAsync(providerId);
+            if (provider != null)
+            {
+                var reviews = await _context.Reviews.Where(r => r.ServiceProviderId == providerId).Select(r => r.Rating).ToListAsync();
+                if (reviews.Any())
+                {
+                    provider.TotalReviews = reviews.Count;
+                    provider.AverageRating = (decimal)reviews.Average();
+                }
+                else
+                {
+                    provider.TotalReviews = 0;
+                    provider.AverageRating = 0;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Moderation));
+        }
+
+        // GET: /Admin/Disputes
+        public async Task<IActionResult> Disputes()
+        {
+            var disputes = await _context.Disputes
+                .Include(d => d.Booking)
+                .Include(d => d.RaisedBy)
+                .OrderByDescending(d => d.CreatedAt)
+                .ToListAsync();
+
+            return View(disputes);
+        }
+
+        // POST: /Admin/ResolveDispute
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResolveDispute(int id, DisputeStatus status, string resolution)
+        {
+            var dispute = await _context.Disputes
+                .Include(d => d.Booking)
+                .Include(d => d.RaisedBy)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
+            if (dispute == null) return NotFound();
+
+            dispute.Status = status;
+            dispute.Resolution = resolution;
+            dispute.ResolvedAt = DateTime.UtcNow;
+            dispute.ResolvedBy = _userManager.GetUserId(User);
+
+            // Notify party who raised the dispute
+            _context.Notifications.Add(new Notification
+            {
+                UserId = dispute.RaisedById,
+                Title = "Dispute Resolved",
+                Message = $"Your dispute for Booking #{dispute.BookingId} has been {status}. Resolution: {resolution}",
+                RelatedEntityId = dispute.Id,
+                RelatedEntityType = "Dispute"
+            });
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Disputes));
+        }
+
+        // GET: /Admin/ViewCustomerProfile/id
+        public async Task<IActionResult> ViewCustomerProfile(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
+            if (customer == null) return NotFound("Customer record not found.");
+
+            var model = new CustomerProfileViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                PreferredLocation = customer.PreferredLocation,
+                ProfilePicture = user.ProfilePicture
+            };
+
+            ViewBag.AdminView = true;
+            return View("~/Views/Customer/Profile.cshtml", model);
+        }
+
+        // GET: /Admin/ViewProviderProfile/id
+        public async Task<IActionResult> ViewProviderProfile(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var provider = await _context.ServiceProviders
+                .Include(p => p.Documents)
+                .Include(p => p.ServiceCategory)
+                .FirstOrDefaultAsync(p => p.UserId == id);
+
+            if (provider == null) return NotFound("Provider record not found.");
+
+            var model = new ProviderProfileViewModel
+            {
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                Email = user.Email,
+                ProfilePicture = user.ProfilePicture,
+                ServiceCategoryId = provider.ServiceCategoryId,
+                ServiceCategoryName = provider.ServiceCategory?.Name,
+                ExperienceYears = provider.ExperienceYears,
+                ServiceAreas = provider.ServiceAreas,
+                Skills = provider.Skills,
+                Status = provider.Status,
+                Latitude = provider.Latitude,
+                Longitude = provider.Longitude,
+                Documents = provider.Documents.ToList()
+            };
+
+            ViewBag.AdminView = true;
+            return View("~/Views/ServiceProvider/Profile.cshtml", model);
+        }
     }
 }

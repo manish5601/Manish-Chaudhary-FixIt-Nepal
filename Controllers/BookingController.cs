@@ -166,9 +166,37 @@ namespace FixItNepal.Controllers
             if (booking == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
-            
-            // Authorization check (Basic)
-            // Provider can Accept/Reject. Customer can Cancel.
+            var isProvider = User.IsInRole("ServiceProvider");
+
+            // --- STRICT CANCELLATION RULES ---
+            if (!isProvider && status == BookingStatus.Cancelled)
+            {
+                if (booking.Status == BookingStatus.Confirmed || booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.AwaitingConfirmation)
+                {
+                    TempData["ErrorMessage"] = "You cannot cancel a booking once it has been confirmed or is in progress. Please contact the provider or support.";
+                    return RedirectToAction("Details", new { id = booking.Id });
+                }
+            }
+
+            // --- COMPLETION FLOW RULES ---
+            // Only customer can mark as "Completed" from "AwaitingConfirmation"
+            if (!isProvider && status == BookingStatus.Completed)
+            {
+                if (booking.Status != BookingStatus.AwaitingConfirmation)
+                {
+                    TempData["ErrorMessage"] = "You can only confirm completion for jobs awaiting your confirmation.";
+                    return RedirectToAction("Details", new { id = booking.Id });
+                }
+            }
+            // Only provider can mark as "AwaitingConfirmation" from "Confirmed"
+            if (isProvider && status == BookingStatus.AwaitingConfirmation)
+            {
+                if (booking.Status != BookingStatus.Confirmed)
+                {
+                    TempData["ErrorMessage"] = "You can only mark confirmed jobs as awaiting confirmation.";
+                    return RedirectToAction("Details", new { id = booking.Id });
+                }
+            }
             
             booking.Status = status;
             
@@ -176,23 +204,21 @@ namespace FixItNepal.Controllers
             string targetUserId = "";
             string message = "";
             
-            if (User.IsInRole("ServiceProvider"))
+            if (isProvider)
             {
                 targetUserId = booking.Customer.UserId;
-                message = $"Your booking for {booking.ServiceItem?.Name} has been {status}.";
+                if (status == BookingStatus.AwaitingConfirmation)
+                    message = $"The provider has marked the service for {booking.ServiceItem?.Name} as finished. Please confirm the completion.";
+                else
+                    message = $"Your booking for {booking.ServiceItem?.Name} has been {status}.";
             }
             else
             {
-                // Customer Cancellation Logic
-                if (booking.Status == BookingStatus.Confirmed)
-                {
-                    // Prevent customer from cancelling if already confirmed
-                    TempData["ErrorMessage"] = "You cannot cancel a confirmed booking. Please contact support or the provider.";
-                    return RedirectToAction("Details", new { id = booking.Id });
-                }
-
                 targetUserId = booking.ServiceProvider.UserId;
-                message = $"Booking for {booking.ServiceItem?.Name} has been {status} by customer.";
+                if (status == BookingStatus.Completed)
+                    message = $"Customer has confirmed completion for {booking.ServiceItem?.Name}. You can now view any feedback received.";
+                else
+                    message = $"Booking for {booking.ServiceItem?.Name} has been {status} by customer.";
             }
 
             var notif = new Notification
@@ -221,7 +247,7 @@ namespace FixItNepal.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("MyBookings");
+            return RedirectToAction("Details", new { id = booking.Id });
         }
 
         // GET: Booking/Details/5
@@ -233,6 +259,7 @@ namespace FixItNepal.Controllers
                 .Include(b => b.ServiceItem)
                 .Include(b => b.Customer).ThenInclude(c => c.User)
                 .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
+                .Include(b => b.Review)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (booking == null) return NotFound();
