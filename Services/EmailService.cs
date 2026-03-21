@@ -37,8 +37,10 @@ namespace FixItNepal.Services
             {
                 using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
                 {
+                    UseDefaultCredentials = false,
                     Credentials = new NetworkCredential(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword),
-                    EnableSsl = true
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network
                 };
 
                 var mailMessage = new MailMessage
