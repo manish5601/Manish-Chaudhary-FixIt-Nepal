@@ -210,6 +210,9 @@
                              <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i><strong>Phone:</strong> @(Model.CustomerPhone ?? Model.Customer?.User?.PhoneNumber ?? "N/A")</p>
                              <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i><strong>Address:</strong> @(Model.CustomerAddress ?? Model.Customer?.PreferredLocation ?? "N/A")</p>
                          </div>
+                         <a asp-controller="Chat" asp-action="Index" asp-route-userId="@Model.Customer?.UserId" asp-route-bookingId="@Model.Id" class="btn btn-primary w-100 mt-3 rounded-pill shadow-sm">
+                             <i class="bi bi-chat-dots me-2"></i>Chat with Customer
+                         </a>
                     }
                     else
                     {
@@ -232,9 +235,14 @@
                          <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="text-decoration-none text-dark">
                              <h5 class="fw-bold hover-primary">@Model.ServiceProvider?.User?.FullName</h5>
                          </a>
-                         <p class="text-muted mb-2">@Model.ServiceProvider?.ServiceCategory?.Name Specialst</p>
-                         
-                         <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="btn btn-outline-primary btn-sm rounded-pill mt-2">View Profile</a>
+                          <p class="text-muted mb-2">@Model.ServiceProvider?.ServiceCategory?.Name Specialst</p>
+                          
+                          <div class="d-grid gap-2 mt-3">
+                              <a asp-controller="Home" asp-action="ProviderDetails" asp-route-id="@Model.ServiceProviderId" class="btn btn-outline-primary btn-sm rounded-pill">View Profile</a>
+                              <a asp-controller="Chat" asp-action="Index" asp-route-userId="@Model.ServiceProvider?.UserId" asp-route-bookingId="@Model.Id" class="btn btn-primary rounded-pill shadow-sm">
+                                  <i class="bi bi-chat-dots me-2"></i>Chat with Provider
+                              </a>
+                          </div>
                     }
                 </div>
             </div>

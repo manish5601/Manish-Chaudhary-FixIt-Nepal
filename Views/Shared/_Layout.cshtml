@@ -48,7 +48,17 @@
                                 </a>
                             </li>
 
-                             if (User.IsInRole("Admin"))
+                            <!-- Chat Link -->
+                            <li class="nav-item me-2">
+                                <a class="nav-link position-relative" asp-controller="Chat" asp-action="Index">
+                                    <i class="bi bi-chat-dots fs-5"></i>
+                                    <span id="chat-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.6em;">
+                                        0
+                                    </span>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard">Dashboard</a></li>
                             }
@@ -177,10 +187,29 @@
                     })
                     .catch(err => console.error('Error fetching notifications:', err));
             }
+            function updateChatBadge() {
+                var badge = document.getElementById('chat-badge');
+                if (!badge) return;
+                
+                fetch('/api/chatapi/unread-count')
+                    .then(response => response.ok ? response.json() : { count: 0 })
+                    .then(data => {
+                        if (data.count > 0) {
+                            badge.innerText = data.count > 99 ? '99+' : data.count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    })
+                    .catch(err => console.error('Error fetching chat count:', err));
+            }
+
             // Poll every 60 seconds
             setInterval(updateNotifications, 60000);
+            setInterval(updateChatBadge, 60000);
             // Run once on load
             updateNotifications();
+            updateChatBadge();
         });
     </script>
 </body>

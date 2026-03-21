@@ -27,16 +27,15 @@
             @foreach (var item in Model)
             {
                 string redirectUrl = "#";
-                if (item.Message.Contains("Booking"))
+                if (item.RelatedEntityType == "Booking" && item.RelatedEntityId.HasValue)
                 {
-                     // Try to extract Booking ID or just redirect to MyBookings
-                     // Since we might not have RelatedEntityId reliably populated for old notifications, we'll default to My Bookings or specific details if we can parse it.
-                     // A safer bet without reliable RelatedEntityId is MyBookings
-                     redirectUrl = Url.Action("MyBookings", "Booking");
+                    redirectUrl = Url.Action("Details", "Booking", new { id = item.RelatedEntityId.Value });
                 }
-                
-                // If RelatedEntityId is available (assuming it was added to model, checking file...)
-                // Checking Model first...
+                else if (item.Message.Contains("Booking"))
+                {
+                    // Fallback for old notifications
+                    redirectUrl = Url.Action("MyBookings", "Booking");
+                }
                 
                 <a href="@Url.Action("ReadAndRedirect", "Notification", new { id = item.Id, url = redirectUrl })" class="list-group-item list-group-item-action @(item.IsRead ? "" : "bg-light") p-4 border-0 border-bottom text-decoration-none">
                     <div class="d-flex w-100 justify-content-between align-items-center">

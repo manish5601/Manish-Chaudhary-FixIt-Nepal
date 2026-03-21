@@ -20,6 +20,7 @@
                         <th>ID</th>
                         <th>Created</th>
                         <th>Raised By</th>
+                        <th>Service / Provider</th>
                         <th>Reason</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -29,7 +30,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">No disputes found.</td>
+                            <td colspan="7" class="text-center py-5 text-muted">No disputes found.</td>
                         </tr>
                     }
                     @foreach (var dispute in Model)
@@ -37,7 +38,14 @@
                         <tr>
                             <td>#@dispute.Id</td>
                             <td>@dispute.CreatedAt.ToShortDateString()</td>
-                            <td>@dispute.RaisedBy.FullName</td>
+                            <td>
+                                <div>@dispute.RaisedBy.FullName</div>
+                                <small class="text-muted">@(dispute.RaisedById == dispute.Booking.Customer.UserId ? "Customer" : "Provider")</small>
+                            </td>
+                            <td>
+                                <div>@dispute.Booking.ServiceItem.Name</div>
+                                <small class="text-muted">By: @dispute.Booking.ServiceProvider.User.FullName</small>
+                            </td>
                             <td>
                                 <strong>@dispute.Reason</strong>
                                 <div class="small text-muted text-truncate" style="max-width: 200px;">@dispute.Description</div>
@@ -65,40 +73,104 @@
     {
         <!-- Modal -->
         <div class="modal fade" id="resolveModal-@dispute.Id" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content border-0">
-                    <div class="modal-header border-0 shadow-sm">
-                        <h5 class="modal-title fw-bold">Resolve Dispute #@dispute.Id</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header border-0 shadow-sm bg-primary text-white">
+                        <h5 class="modal-title fw-bold">Manage Dispute #@dispute.Id</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <form asp-action="ResolveDispute" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@dispute.Id" />
-                        <div class="modal-body">
+                        <div class="modal-body p-4">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted small fw-bold text-uppercase mb-3">Raised By</h6>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="bg-light rounded-circle p-2 me-3">
+                                            <i class="bi bi-person text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold">@dispute.RaisedBy.FullName</p>
+                                            <p class="small text-muted mb-0">@dispute.RaisedBy.Email</p>
+                                            <p class="small text-muted mb-0">@dispute.RaisedBy.PhoneNumber</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    @{
+                                        var raisedAgainst = dispute.RaisedById == dispute.Booking.Customer.UserId 
+                                            ? dispute.Booking.ServiceProvider.User 
+                                            : dispute.Booking.Customer.User;
+                                        var againstRole = dispute.RaisedById == dispute.Booking.Customer.UserId ? "Provider" : "Customer";
+                                    }
+                                    <h6 class="text-muted small fw-bold text-uppercase mb-3">Raised Against (@againstRole)</h6>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="bg-light rounded-circle p-2 me-3">
+                                            <i class="bi bi-person-badge text-danger"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold">@raisedAgainst.FullName</p>
+                                            <p class="small text-muted mb-0">@raisedAgainst.Email</p>
+                                            <p class="small text-muted mb-0">@raisedAgainst.PhoneNumber</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="card bg-light border-0">
+                                        <div class="card-body">
+                                            <h6 class="small fw-bold text-uppercase mb-3">Service Details</h6>
+                                            <div class="row">
+                                                <div class="col-sm-4">
+                                                    <p class="small mb-1 text-muted">Service</p>
+                                                    <p class="fw-bold">@dispute.Booking.ServiceItem.Name</p>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <p class="small mb-1 text-muted">Booking Date</p>
+                                                    <p class="fw-bold">@dispute.Booking.BookingDate.ToShortDateString()</p>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <p class="small mb-1 text-muted">Total Cost</p>
+                                                    <p class="fw-bold text-success">Rs. @dispute.Booking.TotalPrice</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="mb-4">
-                                <h6 class="text-muted small fw-bold text-uppercase mb-3">Dispute Summary</h6>
-                                <p class="mb-1"><strong>Raised By:</strong> @dispute.RaisedBy.FullName</p>
-                                <p class="mb-1"><strong>Reason:</strong> @dispute.Reason</p>
-                                <p class="small text-secondary">@dispute.Description</p>
+                                <h6 class="text-muted small fw-bold text-uppercase mb-2">Dispute Reason</h6>
+                                <p class="fw-bold mb-1">@dispute.Reason</p>
+                                <div class="p-3 bg-white border rounded small text-secondary">
+                                    @dispute.Description
+                                </div>
                             </div>
+
                             <hr />
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Action / Status</label>
-                                <select name="status" class="form-select border-primary-subtle">
-                                    <option value="Open" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Open)">Open</option>
-                                    <option value="UnderReview" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.UnderReview)">Under Review</option>
-                                    <option value="Resolved" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Resolved)">Resolved</option>
-                                    <option value="Rejected" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Rejected)">Rejected</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Resolution Note</label>
-                                <textarea name="resolution" class="form-control border-primary-subtle" rows="4" placeholder="Describe the resolution or internal notes..." required>@dispute.Resolution</textarea>
-                                <div class="form-text small">This note will be visible to the user who raised the dispute.</div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Action / Status</label>
+                                    <select name="status" class="form-select border-primary-subtle">
+                                        <option value="Open" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Open)">Open</option>
+                                        <option value="UnderReview" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.UnderReview)">Under Review</option>
+                                        <option value="Resolved" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Resolved)">Resolved</option>
+                                        <option value="Rejected" selected="@(dispute.Status == FixItNepal.Models.DisputeStatus.Rejected)">Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">Resolution Note</label>
+                                    <textarea name="resolution" class="form-control border-primary-subtle" rows="4" placeholder="Describe the resolution or internal notes..." required>@dispute.Resolution</textarea>
+                                    <div class="form-text small">This note will be visible to the user who raised the dispute.</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer border-0">
-                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <div class="modal-footer border-0 bg-light">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary rounded-pill px-4">Save Resolution</button>
                         </div>
                     </form>

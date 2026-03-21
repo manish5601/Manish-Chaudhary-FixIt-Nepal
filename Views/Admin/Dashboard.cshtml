@@ -5,148 +5,247 @@
 
 <div class="container-fluid bg-light py-4">
     <div class="row">
-        <!-- Sidebar could go here, but for now we keep it top-nav based -->
+        <!-- Main Content -->
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="text-primary-custom fw-bold">Dashboard Overview</h2>
+                    <h2 class="text-orange fw-bold">Dashboard Overview</h2>
                     <p class="text-secondary">Welcome back, Administrator. Real-time platform insights.</p>
                 </div>
                 <div>
-                    <a href="#" class="btn btn-primary rounded-pill"><i class="bi bi-download me-2"></i>Generate Report</a>
+                    <button class="btn btn-primary rounded-pill shadow-sm"><i class="bi bi-download me-2"></i>Export Data</button>
                 </div>
             </div>
 
-            <!-- Stats Row -->
+            <!-- Primary Stats Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <a asp-action="UserManagement" class="card border-0 shadow-sm h-100 bg-white text-decoration-none hover-card transition-all">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="rounded-circle bg-primary-subtle p-3 text-primary">
+                                    <i class="bi bi-people-fill fs-4"></i>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill">+@Model.TotalUsers new</span>
+                            </div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Users</h6>
+                            <h3 class="fw-bold mb-0 text-dark">@Model.TotalUsers</h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="Bookings" class="card border-0 shadow-sm h-100 bg-white text-decoration-none hover-card transition-all">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="rounded-circle bg-success-subtle p-3 text-success">
+                                    <i class="bi bi-calendar-check fs-4"></i>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill">Today: @Model.BookingsToday</span>
+                            </div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Bookings</h6>
+                            <h3 class="fw-bold mb-0 text-dark">@Model.TotalBookings</h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="Bookings" asp-route-status="Completed" class="card border-0 shadow-sm h-100 bg-white text-decoration-none hover-card transition-all">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="rounded-circle bg-warning-subtle p-3 text-warning">
+                                    <i class="bi bi-currency-dollar fs-4"></i>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning rounded-pill">NPR</span>
+                            </div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Revenue</h6>
+                            <h3 class="fw-bold mb-0 text-dark">Rs. @Model.TotalRevenue.ToString("N0")</h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a asp-action="UserManagement" asp-route-role="ServiceProvider" class="card border-0 shadow-sm h-100 bg-white text-decoration-none hover-card transition-all">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="rounded-circle bg-danger-subtle p-3 text-danger">
+                                    <i class="bi bi-hammer fs-4"></i>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger rounded-pill">Active</span>
+                            </div>
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">Active Providers</h6>
+                            <h3 class="fw-bold mb-0 text-dark">@Model.ActiveProviders</h3>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Logistics Stats Row -->
             <div class="row g-4 mb-5">
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 bg-white">
-                        <div class="card-body p-4 d-flex align-items-center">
-                            <div class="rounded-circle bg-primary-subtle p-3 me-3 text-primary">
-                                <i class="bi bi-people-fill fs-3"></i>
+                    <a asp-action="Bookings" asp-route-status="Completed" class="card border-0 shadow-sm bg-white p-3 text-decoration-none hover-card transition-all">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success-subtle p-2 rounded-3 me-3">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </div>
+                                <span class="fw-bold text-dark">Completed</span>
                             </div>
-                            <div>
-                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Users</h6>
-                                <h3 class="fw-bold mb-0">@Model.TotalUsers</h3>
-                            </div>
+                            <span class="fs-5 fw-bold text-success">@Model.CompletedBookings</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 bg-white">
-                        <div class="card-body p-4 d-flex align-items-center">
-                            <div class="rounded-circle bg-success-subtle p-3 me-3 text-success">
-                                <i class="bi bi-hammer fs-3"></i>
+                    <a asp-action="Bookings" asp-route-status="Pending" class="card border-0 shadow-sm bg-white p-3 text-decoration-none hover-card transition-all">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning-subtle p-2 rounded-3 me-3">
+                                    <i class="bi bi-clock-history text-warning"></i>
+                                </div>
+                                <span class="fw-bold text-dark">Pending</span>
                             </div>
-                            <div>
-                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Active Providers</h6>
-                                <h3 class="fw-bold mb-0">@Model.ActiveProviders</h3>
-                            </div>
+                            <span class="fs-5 fw-bold text-warning">@Model.PendingBookings</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 bg-white">
-                        <div class="card-body p-4 d-flex align-items-center">
-                            <div class="rounded-circle bg-warning-subtle p-3 me-3 text-warning">
-                                <i class="bi bi-hourglass-split fs-3"></i>
+                    <a asp-action="Bookings" asp-route-status="Cancelled" class="card border-0 shadow-sm bg-white p-3 text-decoration-none hover-card transition-all">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger-subtle p-2 rounded-3 me-3">
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                </div>
+                                <span class="fw-bold text-dark">Cancelled</span>
                             </div>
-                            <div>
-                                <h6 class="text-muted text-uppercase small fw-bold mb-1">Pending Requests</h6>
-                                <h3 class="fw-bold mb-0">@Model.PendingProviders</h3>
-                            </div>
+                            <span class="fs-5 fw-bold text-danger">@Model.CancelledBookings</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
-                <!-- Removed Revenue Card as requested -->
             </div>
 
-            <!-- Action Cards -->
-            <h4 class="fw-bold text-secondary mb-3">Quick Actions</h4>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-3">
-                                <i class="bi bi-person-check-fill fs-1 text-primary"></i>
+            <div class="row g-4 mb-5">
+                <!-- Top Categories -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Top Service Categories</h5>
+                            <span class="text-muted small">By Volume</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4">Category</th>
+                                            <th class="text-center">Bookings</th>
+                                            <th class="text-end pe-4">Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var cat in Model.TopCategories)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-bold">@cat.CategoryName</td>
+                                                <td class="text-center">@cat.BookingCount</td>
+                                                <td class="text-end pe-4">Rs. @cat.Revenue.ToString("N0")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
-                            <h5 class="card-title fw-bold">Verify Providers</h5>
-                            <p class="card-text text-secondary small mb-4">Review and approve new service provider applications and documents.</p>
-                            <a asp-action="VerifyProviders" class="btn btn-outline-primary rounded-pill px-4 stretched-link">Go to Verification</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-3">
-                                <i class="bi bi-tags-fill fs-1 text-primary"></i>
-                            </div>
-                            <h5 class="card-title fw-bold">Manage Services</h5>
-                            <p class="card-text text-secondary small mb-4">Create new services, update prices, and manage categories.</p>
-                            <a asp-controller="Service" asp-action="Index" class="btn btn-outline-primary rounded-pill px-4 stretched-link">Manage Catalog</a>
+
+                <!-- Top Providers -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-star-fill me-2 text-warning"></i>Top Rated Providers</h5>
+                            <span class="text-muted small">Performance Insight</span>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                             <div class="mb-3">
-                                <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4">Provider</th>
+                                            <th class="text-center">Rating</th>
+                                            <th class="text-center">Completed</th>
+                                            <th class="text-end pe-4">Reviews</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var pro in Model.TopProviders)
+                                        {
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <div class="fw-bold">@pro.ProviderName</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="text-warning"><i class="bi bi-star-fill me-1"></i>@pro.AverageRating.ToString("F1")</span>
+                                                </td>
+                                                <td class="text-center">@pro.CompletedBookings</td>
+                                                <td class="text-end pe-4 text-muted">@pro.TotalReviews</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
-                            <h5 class="card-title fw-bold">User Management</h5>
-                            <p class="card-text text-secondary small mb-4">Manage customer accounts, roles, permission and account status.</p>
-                            <a asp-action="UserManagement" class="btn btn-outline-primary rounded-pill px-4 stretched-link">Manage Users</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Additional Actions Row -->
-            <div class="row g-4 mt-1">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-3">
-                                <i class="bi bi-grid-fill fs-1 text-primary"></i>
-                            </div>
-                            <h5 class="card-title fw-bold">Service Categories</h5>
-                            <p class="card-text text-secondary small mb-4">Organize services into categories (e.g. Plumbing, Electrical).</p>
-                            <a asp-controller="ServiceCategory" asp-action="Index" class="btn btn-outline-primary rounded-pill px-4 stretched-link">Manage Categories</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Moderation Card -->
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-3">
-                                <i class="bi bi-shield-exclamation-fill fs-1 text-warning"></i>
-                            </div>
-                            <h5 class="card-title fw-bold">Content Moderation</h5>
-                            <p class="card-text text-secondary small mb-4">Review flagged content and manage community standards.</p>
-                            <a asp-action="Moderation" class="btn btn-outline-warning rounded-pill px-4 stretched-link">Moderation Center</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Disputes Card -->
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100 hover-card transition-all">
-                        <div class="card-body p-4 text-center">
-                            <div class="mb-3">
-                                <i class="bi bi-exclamation-triangle-fill fs-1 text-danger"></i>
-                            </div>
-                            <h5 class="card-title fw-bold">Dispute Management</h5>
-                            <p class="card-text text-secondary small mb-4">Handle conflicts between customers and service providers.</p>
-                            <a asp-action="Disputes" class="btn btn-outline-danger rounded-pill px-4 stretched-link">Resolve Disputes</a>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Recent Activity Table -->
-             <div class="card border-0 shadow-sm mt-5">
-                <div class="card-header bg-white py-3 border-0">
-                    <h5 class="mb-0 fw-bold">Recent System Activity</h5>
+
+            <!-- Quick Actions -->
+            <div class="mb-4">
+                <h4 class="fw-bold text-secondary mb-3">Management Center</h4>
+                <div class="row g-4">
+                    <div class="col-md-2">
+                        <a asp-action="VerifyProviders" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-person-check-fill fs-2 text-primary mb-2"></i>
+                            <div class="fw-bold text-dark small">Verification</div>
+                            @if (Model.PendingProviders > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">@Model.PendingProviders</span>
+                            }
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-controller="Service" asp-action="Index" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-tags-fill fs-2 text-success mb-2"></i>
+                            <div class="fw-bold text-dark small">Services</div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="UserManagement" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-shield-lock-fill fs-2 text-info mb-2"></i>
+                            <div class="fw-bold text-dark small">Users</div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-controller="ServiceCategory" asp-action="Index" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-grid-fill fs-2 text-secondary mb-2"></i>
+                            <div class="fw-bold text-dark small">Categories</div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="Moderation" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-flag-fill fs-2 text-warning mb-2"></i>
+                            <div class="fw-bold text-dark small">Moderation</div>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="Disputes" class="card border-0 shadow-sm text-center p-3 text-decoration-none hover-card transition-all">
+                            <i class="bi bi-exclamation-triangle-fill fs-2 text-danger mb-2"></i>
+                            <div class="fw-bold text-dark small">Disputes</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="card border-0 shadow-sm mt-5">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-lightning-fill me-2 text-warning"></i>Recent System Activity</h5>
+                    <a asp-action="Bookings" class="btn btn-sm btn-outline-primary rounded-pill">View All Bookings</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -156,7 +255,7 @@
                                     <th class="ps-4">User</th>
                                     <th>Action</th>
                                     <th>Time</th>
-                                    <th>Status</th>
+                                    <th class="pe-4">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -167,20 +266,22 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-light rounded-circle p-1 me-2"><i class="bi bi-person"></i></div>
-                                                    <strong>@activity.UserName</strong>
+                                                    <div class="bg-light rounded-circle p-2 me-3"><i class="bi bi-person"></i></div>
+                                                    <div>
+                                                        <div class="fw-bold">@activity.UserName</div>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td>@activity.Action</td>
-                                            <td class="text-muted">@activity.TimeAgo</td>
-                                            <td><span class="badge @activity.StatusColor rounded-pill">@activity.StatusText</span></td>
+                                            <td class="text-muted small">@activity.TimeAgo</td>
+                                            <td class="pe-4"><span class="badge @activity.StatusColor rounded-pill">@activity.StatusText</span></td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">No recent activity.</td>
+                                        <td colspan="4" class="text-center py-4 text-muted">No recent activity detected.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -192,3 +293,16 @@
         </div>
     </div>
 </div>
+
+<style>
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    .text-orange {
+        color: #fd7e14;
+    }
+</style>

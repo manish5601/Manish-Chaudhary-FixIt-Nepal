@@ -31,6 +31,9 @@
                         <p class="mb-2"><i class="bi bi-briefcase me-2 text-primary"></i>@Model.ExperienceYears Years Experience</p>
                         <p class="mb-0"><i class="bi bi-check-circle me-2 text-primary"></i>Verified Professional</p>
                     </div>
+                    <a asp-controller="Chat" asp-action="Index" asp-route-userId="@Model.UserId" class="btn btn-primary w-100 mt-4 rounded-pill shadow-sm">
+                        <i class="bi bi-chat-dots me-2"></i>Chat with Provider
+                    </a>
                 </div>
             </div>
         </div>

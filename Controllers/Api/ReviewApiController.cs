@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using FixItNepal.Services;
 
 namespace FixItNepal.Controllers.Api
 {
@@ -16,11 +17,13 @@ namespace FixItNepal.Controllers.Api
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
 
-        public ReviewApiController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ReviewApiController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // POST: api/ReviewApi
@@ -35,7 +38,7 @@ namespace FixItNepal.Controllers.Api
             if (customer == null) return BadRequest("Only customers can leave reviews.");
 
             var booking = await _context.Bookings
-                .Include(b => b.ServiceProvider)
+                .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(b => b.Id == model.BookingId);
 
             if (booking == null) return NotFound("Booking not found.");
@@ -77,14 +80,38 @@ namespace FixItNepal.Controllers.Api
             }
 
             // Notify Provider
-            _context.Notifications.Add(new Notification
+            var notif = new Notification
             {
                 UserId = booking.ServiceProvider.UserId,
                 Title = "New Review Received",
-                Message = $"A customer has left a {model.Rating}-star review for your service.",
-                RelatedEntityId = review.Id,
-                RelatedEntityType = "Review"
-            });
+                Message = $"A customer has left a {model.Rating}-star review for your {booking.ServiceItem?.Name} service.",
+                RelatedEntityId = booking.Id,
+                RelatedEntityType = "Booking",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notif);
+
+            // Send Email to Provider
+            var providerUser = booking.ServiceProvider.User;
+            if (providerUser != null)
+            {
+                var subject = $"New Review Received: {model.Rating} Stars! - FixIt Nepal";
+                var body = $@"
+                    <div style='font-family: sans-serif; color: #333;'>
+                        <h2 style='color: #ffca28;'>New Review Received!</h2>
+                        <p>Hello <strong>{providerUser.FullName}</strong>,</p>
+                        <p>A customer has left a <strong>{model.Rating}-star</strong> review for your <strong>{booking.ServiceItem?.Name}</strong> service.</p>
+                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                            <p style='font-style: italic;'>""{model.Comment}""</p>
+                        </div>
+                        <p>You can view all your reviews on your <a href='https://fixitnepal.com/ServiceProvider/Profile'>Profile</a>.</p>
+                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                        <p style='font-size: 0.9em; color: #666;'>Keep up the great work! <br> FixIt Nepal Team</p>
+                    </div>
+                ";
+                await _emailService.SendEmailAsync(providerUser.Email, subject, body);
+            }
 
             await _context.SaveChangesAsync();
 

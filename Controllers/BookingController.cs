@@ -56,7 +56,7 @@ namespace FixItNepal.Controllers
             if (ModelState.IsValid)
             {
                 var userId = _userManager.GetUserId(User);
-                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+                var customer = await _context.Customers.Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (customer == null)
                 {
@@ -84,6 +84,7 @@ namespace FixItNepal.Controllers
                 };
 
                 _context.Bookings.Add(booking);
+                await _context.SaveChangesAsync(); // Save first to get booking.Id
                 
                 // Add Notification for Provider
                 var providerUser = await _context.ServiceProviders.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == model.ServiceProviderId);
@@ -93,27 +94,44 @@ namespace FixItNepal.Controllers
                     {
                         UserId = providerUser.UserId,
                         Title = "New Booking Request",
-                        Message = $"You have a new booking request from a customer for {model.BookingDate.ToShortDateString()}.",
+                        Message = $"You have a new booking request for {model.ServiceName} on {model.BookingDate.ToShortDateString()}.",
                         Type = NotificationType.System,
                         IsRead = false,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        RelatedEntityId = booking.Id,
+                        RelatedEntityType = "Booking"
                     };
                     _context.Notifications.Add(notif);
 
                     // Send Email to Provider
-                    var subject = "New Booking Request - FixIt Nepal";
+                    var subject = $"New Booking Request: {model.ServiceName} - FixIt Nepal";
                     var body = $@"
-                        <h2>New Booking Request</h2>
-                        <p>Hello {providerUser.User.FullName},</p>
-                        <p>You have received a new booking request for <strong>{model.ServiceName}</strong>.</p>
-                        <p><strong>Date:</strong> {model.BookingDate.ToShortDateString()}</p>
-                        <p><strong>Time:</strong> {model.StartTime} - {model.EndTime}</p>
-                        <p>Please login to your dashboard to review and accept the booking.</p>
+                        <div style='font-family: sans-serif; color: #333;'>
+                            <h2 style='color: #0d6efd;'>New Booking Request</h2>
+                            <p>Hello <strong>{providerUser.User.FullName}</strong>,</p>
+                            <p>You have received a new booking request for <strong>{model.ServiceName}</strong>.</p>
+                            <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                                <h4 style='margin-top: 0;'>Booking Details:</h4>
+                                <ul style='list-style: none; padding: 0;'>
+                                    <li><strong>Date:</strong> {model.BookingDate.ToShortDateString()}</li>
+                                    <li><strong>Time Slot:</strong> {model.StartTime} - {model.EndTime}</li>
+                                    <li><strong>Total Price:</strong> Rs. {model.Price}</li>
+                                </ul>
+                                <h4 style='margin-top: 15px;'>Customer Details:</h4>
+                                <ul style='list-style: none; padding: 0;'>
+                                    <li><strong>Name:</strong> {customer.User.FullName}</li>
+                                    <li><strong>Phone:</strong> {model.CustomerPhone ?? "N/A"}</li>
+                                    <li><strong>Address:</strong> {model.CustomerAddress ?? "N/A"}</li>
+                                </ul>
+                            </div>
+                            <p>Please login to your dashboard to review and accept the booking.</p>
+                            <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                            <p style='font-size: 0.9em; color: #666;'>Thank you for being part of FixIt Nepal.</p>
+                        </div>
                     ";
                     await _emailService.SendEmailAsync(providerUser.User.Email, subject, body);
+                    await _context.SaveChangesAsync();
                 }
-
-                await _context.SaveChangesAsync();
 
                 return RedirectToAction("MyBookings");
             }
@@ -228,7 +246,9 @@ namespace FixItNepal.Controllers
                 Message = message,
                 Type = NotificationType.System,
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                RelatedEntityId = booking.Id,
+                RelatedEntityType = "Booking"
             };
             _context.Notifications.Add(notif);
 
@@ -236,12 +256,25 @@ namespace FixItNepal.Controllers
             var targetUser = await _userManager.FindByIdAsync(targetUserId);
             if (targetUser != null)
             {
-                 var subject = $"Booking Update - {status}";
+                 var subject = $"Booking Update: {status} - FixIt Nepal";
                  var body = $@"
-                     <h2>Booking Update</h2>
-                     <p>Hello {targetUser.FullName},</p>
-                     <p>{message}</p>
-                     <p>Thank you for using FixIt Nepal.</p>
+                    <div style='font-family: sans-serif; color: #333;'>
+                        <h2 style='color: #0d6efd;'>Booking Update</h2>
+                        <p>Hello <strong>{targetUser.FullName}</strong>,</p>
+                        <p style='font-size: 1.1em;'>{message}</p>
+                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                            <h4 style='margin-top: 0;'>Booking Summary:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li><strong>Service:</strong> {booking.ServiceItem?.Name}</li>
+                                <li><strong>Date:</strong> {booking.BookingDate.ToShortDateString()}</li>
+                                <li><strong>Time Slot:</strong> {booking.StartTime} - {booking.EndTime}</li>
+                                <li><strong>Status:</strong> <span style='font-weight: bold;'>{status}</span></li>
+                            </ul>
+                        </div>
+                        <p>You can view more details on your <a href='https://fixitnepal.com/Booking/Details/{booking.Id}'>Booking Details</a> page.</p>
+                        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                        <p style='font-size: 0.9em; color: #666;'>Thank you for using FixIt Nepal.</p>
+                    </div>
                  ";
                  await _emailService.SendEmailAsync(targetUser.Email, subject, body);
             }

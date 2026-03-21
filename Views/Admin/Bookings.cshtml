@@ -1,0 +1,95 @@
+@model IEnumerable<FixItNepal.Models.Booking>
+@{
+    ViewData["Title"] = "Booking Management";
+    var currentStatus = ViewBag.CurrentStatus as FixItNepal.Models.BookingStatus?;
+    var currentSearch = ViewBag.CurrentSearch as string;
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-orange fw-bold">Booking Management</h2>
+        
+        <form method="get" class="d-flex gap-2">
+            <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                @foreach (var status in Enum.GetValues(typeof(FixItNepal.Models.BookingStatus)))
+                {
+                    <option value="@status" selected="@(currentStatus.HasValue && (int)currentStatus.Value == (int)status)">@status</option>
+                }
+            </select>
+            <input type="text" name="search" class="form-control" placeholder="Search customer/provider/ID..." value="@currentSearch">
+            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+            @if(currentStatus.HasValue || !string.IsNullOrEmpty(currentSearch))
+            {
+                <a asp-action="Bookings" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+            }
+        </form>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Booking ID</th>
+                            <th>Customer</th>
+                            <th>Provider</th>
+                            <th>Service</th>
+                            <th>Date & Time</th>
+                            <th>Total Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var booking in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">#@booking.Id</td>
+                                    <td>@booking.Customer.User.FullName</td>
+                                    <td>@booking.ServiceProvider.User.FullName</td>
+                                    <td>@booking.ServiceItem?.Name</td>
+                                    <td>
+                                        <div class="small fw-bold">@booking.BookingDate.ToShortDateString()</div>
+                                        <div class="small text-muted">@booking.StartTime.ToString(@"hh\:mm") - @booking.EndTime.ToString(@"hh\:mm")</div>
+                                    </td>
+                                    <td class="fw-bold text-success">Rs. @booking.TotalPrice.ToString("N0")</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = booking.Status switch
+                                            {
+                                                FixItNepal.Models.BookingStatus.Completed => "bg-success",
+                                                FixItNepal.Models.BookingStatus.Cancelled => "bg-danger",
+                                                FixItNepal.Models.BookingStatus.Pending => "bg-warning text-dark",
+                                                FixItNepal.Models.BookingStatus.Rejected => "bg-secondary",
+                                                FixItNepal.Models.BookingStatus.Confirmed => "bg-primary",
+                                                _ => "bg-info"
+                                            };
+                                        }
+                                        <span class="badge @badgeClass rounded-pill">
+                                            @booking.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">No bookings found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-orange {
+        color: #fd7e14;
+    }
+</style>

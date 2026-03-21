@@ -1,0 +1,234 @@
+@model FixItNepal.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container py-4">
+    <div class="row g-4 overflow-hidden" style="height: 600px; max-height: 65vh; min-height: 500px; margin-bottom: 60px;">
+        <!-- Conversations List -->
+        <div class="col-lg-4 col-md-5 h-100">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden chat-card">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold mb-0">Messages</h5>
+                </div>
+                <div class="card-body p-0 overflow-auto" id="conversations-list">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="col-lg-8 col-md-7 h-100">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden d-flex flex-column chat-card">
+                @if (Model != null)
+                {
+                    <!-- Chat Header -->
+                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                        <div class="position-relative">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                            {
+                                <img src="/uploads/profiles/@Model.ProfilePicture" alt="Profile" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center shadow-sm" style="width: 45px; height: 45px; font-weight: 600;">
+                                    @Model.FullName?.Substring(0, 1).ToUpper()
+                                </div>
+                            }
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width: 12px; height: 12px;"></span>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">@Model.FullName</h6>
+                            <small class="text-muted">Online</small>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div class="card-body p-4 overflow-auto flex-grow-1 bg-light" id="messages-container" style="background-image: radial-gradient(#dee2e6 1px, transparent 1px); background-size: 20px 20px; min-height: 0;">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="card-footer bg-white border-top-0 p-3">
+                        <form id="chat-form" class="d-flex gap-2">
+                            <input type="hidden" id="target-userid" value="@ViewBag.TargetUserId" />
+                            <input type="hidden" id="booking-id" value="@ViewBag.BookingId" />
+                            <input type="text" id="message-input" class="form-control border-0 bg-light rounded-pill px-4" placeholder="Type a message..." autocomplete="off" />
+                            <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center text-muted">
+                        <i class="bi bi-chat-dots display-1 mb-3 opacity-25"></i>
+                        <h5>Select a conversation to start chatting</h5>
+                        <p class="small">Contact providers or customers from their profile or bookings.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const currentUserId = "@ViewBag.CurrentUserId";
+        const targetUserId = "@ViewBag.TargetUserId";
+        const bookingId = "@ViewBag.BookingId";
+
+        // Initialize SignalR
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveMessage", function (senderId, chatMessage) {
+            if (senderId === targetUserId) {
+                appendMessage(chatMessage, false);
+                markAsRead(chatMessage.id);
+            } else {
+                // Potential notification for other conversations
+                loadConversations();
+            }
+        });
+
+        connection.on("MessageSent", function (chatMessage) {
+            if (chatMessage.receiverId === targetUserId) {
+                appendMessage(chatMessage, true);
+            }
+            loadConversations();
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+
+        // DOM Elements
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('messages-container');
+        const conversationsList = document.getElementById('conversations-list');
+
+        if (chatForm) {
+            chatForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                try {
+                    await connection.invoke("SendMessage", targetUserId, message, bookingId ? parseInt(bookingId) : null);
+                    messageInput.value = '';
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        function appendMessage(msg, isMine) {
+            if (!messagesContainer) return;
+
+            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const messageHtml = `
+                <div class="d-flex ${isMine ? 'justify-content-end' : 'justify-content-start'} mb-4">
+                    <div class="max-width-75">
+                        <div class="p-3 rounded-4 shadow-sm ${isMine ? 'bg-primary text-white rounded-bottom-end-0' : 'bg-white text-dark rounded-bottom-start-0 border'}">
+                            ${msg.message}
+                        </div>
+                        <div class="text-muted small mt-1 ${isMine ? 'text-end' : ''}">
+                            ${time} ${isMine ? (msg.isRead ? '<i class="bi bi-check2-all text-primary"></i>' : '<i class="bi bi-check2"></i>') : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function loadHistory() {
+            if (!targetUserId || !messagesContainer) return;
+
+            try {
+                const response = await fetch(`/api/chatapi/history/${targetUserId}?bookingId=${bookingId || ''}`);
+                const history = await response.json();
+                
+                messagesContainer.innerHTML = '';
+                history.forEach(msg => {
+                    appendMessage(msg, msg.senderId === currentUserId);
+                });
+
+                // Mark all as read
+                if (history.length > 0) {
+                     fetch(`/api/chatapi/mark-read/${targetUserId}`, { method: 'POST' });
+                }
+            } catch (err) {
+                console.error('Error loading history:', err);
+            }
+        }
+
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/chatapi/conversations');
+                const conversations = await response.json();
+
+                conversationsList.innerHTML = '';
+                if (conversations.length === 0) {
+                    conversationsList.innerHTML = '<div class="text-center py-5 text-muted small">No conversations yet</div>';
+                    return;
+                }
+
+                conversations.forEach(c => {
+                    const isActive = c.id === targetUserId;
+                    const timestamp = c.lastTimestamp ? new Date(c.lastTimestamp).toLocaleDateString() : '';
+                    
+                    const itemHtml = `
+                        <a href="/Chat?userId=${c.id}" class="list-group-item list-group-item-action border-0 p-3 d-flex align-items-center gap-3 ${isActive ? 'bg-light border-start border-primary border-4' : ''}">
+                            <div class="position-relative">
+                                ${c.profilePicture ? 
+                                    `<img src="/uploads/profiles/${c.profilePicture}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;" />` :
+                                    `<div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center shadow-sm" style="width: 48px; height: 48px; font-weight: 600;">${c.fullName.substring(0, 1).toUpperCase()}</div>`
+                                }
+                                ${c.unreadCount > 0 ? `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">${c.unreadCount}</span>` : ''}
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold mb-0 text-truncate" style="max-width: 150px;">${c.fullName}</h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">${timestamp}</small>
+                                </div>
+                                <p class="small text-muted mb-0 text-truncate">${c.lastMessage || 'No messages'}</p>
+                            </div>
+                        </a>
+                    `;
+                    conversationsList.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            } catch (err) {
+                console.error('Error loading conversations:', err);
+            }
+        }
+
+        async function markAsRead(messageId) {
+             await connection.invoke("MarkAsRead", messageId);
+        }
+
+        // Initial Load
+        loadHistory();
+        loadConversations();
+    </script>
+
+    <style>
+        .max-width-75 { max-width: 75%; }
+        .rounded-4 { border-radius: 1rem !important; }
+        .rounded-bottom-end-0 { border-bottom-right-radius: 0 !important; }
+        .rounded-bottom-start-0 { border-bottom-left-radius: 0 !important; }
+        #messages-container::-webkit-scrollbar { width: 6px; }
+        #messages-container::-webkit-scrollbar-track { background: transparent; }
+        #messages-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        #conversations-list::-webkit-scrollbar { width: 4px; }
+        #conversations-list::-webkit-scrollbar-thumb { background: #e2e8f0; }
+        .list-group-item-action:hover { background-color: #f8fafc; }
+        .chat-card:hover { transform: none !important; box-shadow: var(--shadow-md) !important; }
+    </style>
+}

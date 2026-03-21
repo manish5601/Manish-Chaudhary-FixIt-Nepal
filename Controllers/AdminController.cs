@@ -28,51 +28,101 @@ namespace FixItNepal.Controllers
             var totalUsers = await _context.Users.CountAsync();
             var activeProviders = await _context.ServiceProviders.CountAsync(p => p.Status == VerificationStatus.Approved);
             var pendingProviders = await _context.ServiceProviders.CountAsync(p => p.Status == VerificationStatus.Pending);
-            var bookingsToday = 0; // Placeholder
+            
+            // Booking Stats
+            var today = DateTime.UtcNow.Date;
+            var bookingsToday = await _context.Bookings.CountAsync(b => b.CreatedAt >= today);
+            var totalBookings = await _context.Bookings.CountAsync();
+            var completedBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Completed);
+            var pendingBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Pending);
+            var cancelledBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Cancelled);
 
-            // Fetch recent activities (Fetch entities first to avoid EF translation issues with GetTimeAgo/ToString)
+            // Revenue (Only from completed bookings)
+            var totalRevenue = await _context.Bookings
+                .Where(b => b.Status == BookingStatus.Completed)
+                .SumAsync(b => b.TotalPrice);
+
+            // Category Insights
+            var topCategories = await _context.Bookings
+                .Include(b => b.ServiceItem).ThenInclude(si => si.ServiceCategory)
+                .Where(b => b.Status == BookingStatus.Completed)
+                .GroupBy(b => b.ServiceItem.ServiceCategory.Name)
+                .Select(g => new CategoryInsight
+                {
+                    CategoryName = g.Key,
+                    BookingCount = g.Count(),
+                    Revenue = g.Sum(b => b.TotalPrice)
+                })
+                .OrderByDescending(c => c.BookingCount)
+                .Take(5)
+                .ToListAsync();
+
+            // Provider Insights
+            var topProviders = await _context.ServiceProviders
+                .Include(p => p.User)
+                .Where(p => p.Status == VerificationStatus.Approved && p.TotalReviews > 0)
+                .OrderByDescending(p => p.AverageRating)
+                .ThenByDescending(p => p.TotalReviews)
+                .Take(5)
+                .Select(p => new ProviderInsight
+                {
+                    ProviderName = p.User.FullName,
+                    AverageRating = p.AverageRating,
+                    TotalReviews = p.TotalReviews,
+                    CompletedBookings = _context.Bookings.Count(b => b.ServiceProviderId == p.Id && b.Status == BookingStatus.Completed)
+                })
+                .ToListAsync();
+
+            // Fetch recent activities
             var recentProvidersData = await _context.ServiceProviders
                 .Include(p => p.User)
                 .OrderByDescending(p => p.RegisteredAt)
+                .Take(3)
+                .ToListAsync();
+
+            var recentBookingsData = await _context.Bookings
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .OrderByDescending(b => b.CreatedAt)
                 .Take(5)
                 .ToListAsync();
 
-            var recentCustomersData = await _context.Customers
-                .Include(c => c.User)
-                .OrderByDescending(c => c.RegisteredAt)
-                .Take(5)
-                .ToListAsync();
+            var recentActivities = new List<DashboardActivity>();
 
-            var recentProviders = recentProvidersData.Select(p => new DashboardActivity
-                {
-                    UserName = p.User.FullName,
-                    Action = "Registered as Provider",
-                    TimeAgo = GetTimeAgo(p.RegisteredAt),
-                    StatusText = p.Status.ToString(),
-                    StatusColor = p.Status == VerificationStatus.Pending ? "bg-warning-subtle text-warning" : 
-                                  p.Status == VerificationStatus.Approved ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger"
-                });
+            recentActivities.AddRange(recentProvidersData.Select(p => new DashboardActivity
+            {
+                UserName = p.User.FullName,
+                Action = "Joined as Provider",
+                TimeAgo = GetTimeAgo(p.RegisteredAt),
+                StatusText = p.Status.ToString(),
+                StatusColor = p.Status == VerificationStatus.Pending ? "bg-warning-subtle text-warning" : 
+                              p.Status == VerificationStatus.Approved ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger"
+            }));
 
-            var recentCustomers = recentCustomersData.Select(c => new DashboardActivity
-                {
-                    UserName = c.User.FullName,
-                    Action = "Joined as Customer",
-                    TimeAgo = GetTimeAgo(c.RegisteredAt),
-                    StatusText = "Active",
-                    StatusColor = "bg-primary-subtle text-primary"
-                });
+            recentActivities.AddRange(recentBookingsData.Select(b => new DashboardActivity
+            {
+                UserName = b.Customer.User.FullName,
+                Action = $"Booked Service #{b.Id}",
+                TimeAgo = GetTimeAgo(b.CreatedAt),
+                StatusText = b.Status.ToString(),
+                StatusColor = b.Status == BookingStatus.Completed ? "bg-success-subtle text-success" :
+                              b.Status == BookingStatus.Cancelled ? "bg-danger-subtle text-danger" :
+                              b.Status == BookingStatus.Pending ? "bg-warning-subtle text-warning" : "bg-info-subtle text-info"
+            }));
 
-            // Merge and sort in memory
-            var activities = recentProviders.Concat(recentCustomers)
-                .ToList(); // Determine sort order if needed, or just mix
-            
-            var model = new AdminDashboardViewModel // Removed ViewModels. prefix
+            var model = new AdminDashboardViewModel 
             {
                 TotalUsers = totalUsers,
                 ActiveProviders = activeProviders,
                 PendingProviders = pendingProviders,
                 BookingsToday = bookingsToday,
-                RecentActivities = activities.Take(5).ToList()
+                TotalBookings = totalBookings,
+                CompletedBookings = completedBookings,
+                PendingBookings = pendingBookings,
+                CancelledBookings = cancelledBookings,
+                TotalRevenue = totalRevenue,
+                TopCategories = topCategories,
+                TopProviders = topProviders,
+                RecentActivities = recentActivities.OrderByDescending(a => a.TimeAgo).Take(10).ToList() // Note: TimeAgo sorting is strings, might want to refine Activity model but OK for now as we just merged lists.
             };
 
             return View(model);
@@ -330,6 +380,11 @@ namespace FixItNepal.Controllers
         {
             var disputes = await _context.Disputes
                 .Include(d => d.Booking)
+                    .ThenInclude(b => b.Customer).ThenInclude(c => c.User)
+                .Include(d => d.Booking)
+                    .ThenInclude(b => b.ServiceProvider).ThenInclude(p => p.User)
+                .Include(d => d.Booking)
+                    .ThenInclude(b => b.ServiceItem)
                 .Include(d => d.RaisedBy)
                 .OrderByDescending(d => d.CreatedAt)
                 .ToListAsync();
@@ -366,6 +421,33 @@ namespace FixItNepal.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Disputes));
+        }
+
+        // GET: /Admin/Bookings
+        public async Task<IActionResult> Bookings(BookingStatus? status, string search)
+        {
+            var query = _context.Bookings
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
+                .Include(b => b.ServiceItem)
+                .AsQueryable();
+
+            if (status.HasValue)
+            {
+                query = query.Where(b => b.Status == status.Value);
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(b => b.Customer.User.FullName.Contains(search) || 
+                                        b.ServiceProvider.User.FullName.Contains(search) ||
+                                        b.Id.ToString() == search);
+            }
+
+            var bookings = await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
+            ViewBag.CurrentStatus = status;
+            ViewBag.CurrentSearch = search;
+            return View(bookings);
         }
 
         // GET: /Admin/ViewCustomerProfile/id

@@ -1,4 +1,4 @@
-﻿using FixItNepal.Models;
+using FixItNepal.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +21,7 @@ namespace FixItNepal.Data
         public DbSet<ProviderAvailability> ProviderAvailabilities { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Dispute> Disputes { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -100,6 +101,19 @@ namespace FixItNepal.Data
             builder.Entity<FixItNepal.Models.ServiceProvider>()
                 .Property(p => p.AverageRating)
                 .HasColumnType("decimal(3,2)"); // 0.00 to 5.00
+
+            // ChatMessage Relationships
+            builder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ChatMessage>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

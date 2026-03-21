@@ -1,4 +1,5 @@
 using FixItNepal.Data;
+using FixItNepal.Hubs;
 using FixItNepal.Models;
 using FixItNepal.Services;
 using Microsoft.AspNetCore.Identity;
@@ -45,6 +46,8 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+builder.Services.AddSignalR();
+
 // Configure Email Service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -68,6 +71,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllers();
 
