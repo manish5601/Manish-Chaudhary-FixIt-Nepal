@@ -66,6 +66,12 @@
                                         {
                                             case FixItNepal.Models.BookingStatus.Pending:
                                                 <span class="badge bg-warning text-dark">Pending</span>
+                                                @if (item.ExpiresAt.HasValue && item.Status == FixItNepal.Models.BookingStatus.Pending)
+                                                {
+                                                    <div class="text-danger x-small mt-1" style="font-size: 0.75rem;">
+                                                        <i class="bi bi-clock-history"></i> Expires in @((item.ExpiresAt.Value - DateTime.UtcNow).TotalHours.ToString("0"))h
+                                                    </div>
+                                                }
                                                 break;
                                             case FixItNepal.Models.BookingStatus.Confirmed:
                                                 <span class="badge bg-success">Confirmed</span>
@@ -79,6 +85,18 @@
                                             case FixItNepal.Models.BookingStatus.Completed:
                                                 <span class="badge bg-primary">Completed</span>
                                                 break;
+                                            case FixItNepal.Models.BookingStatus.PaymentPending:
+                                                <span class="badge bg-info text-dark">Awaiting Payment</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.Expired:
+                                                <span class="badge bg-dark">Expired</span>
+                                                break;
+                                            case FixItNepal.Models.BookingStatus.RefundPending:
+                                                <span class="badge bg-danger">Refund Pending</span>
+                                                <div class="text-muted x-small mt-1" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-info-circle"></i> Token refund in progress
+                                                </div>
+                                                break;
                                         }
                                     </td>
                                     <td class="text-end pe-4">
@@ -91,12 +109,12 @@
                                                 <form asp-action="UpdateStatus" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@item.Id" />
                                                     <input type="hidden" name="status" value="Confirmed" />
-                                                    <button type="submit" class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i> Confirm</button>
                                                 </form>
                                                 <form asp-action="UpdateStatus" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@item.Id" />
                                                     <input type="hidden" name="status" value="Rejected" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> Reject</button>
                                                 </form>
                                             }
                                             else
@@ -104,9 +122,14 @@
                                                 <form asp-action="UpdateStatus" method="post" class="d-inline">
                                                     <input type="hidden" name="id" value="@item.Id" />
                                                     <input type="hidden" name="status" value="Cancelled" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i> Cancel</button>
                                                 </form>
                                             }
+                                        }
+                                        
+                                        @if (item.Status == FixItNepal.Models.BookingStatus.PaymentPending && !ViewBag.IsProvider)
+                                        {
+                                            <a asp-action="PayNow" asp-route-id="@item.Id" class="btn btn-sm btn-info text-dark fw-bold"><i class="bi bi-wallet2"></i> Pay Now (Rs. 10)</a>
                                         }
                                         @* Cancel button hidden for confirmed customer bookings as per requirement *@
                                     </td>

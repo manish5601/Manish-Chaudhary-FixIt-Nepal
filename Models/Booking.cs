@@ -6,12 +6,15 @@ namespace FixItNepal.Models
 {
     public enum BookingStatus
     {
-        Pending,
-        Confirmed,
-        Completed,
-        Cancelled,
-        Rejected,
-        AwaitingConfirmation
+        Pending,              // Awaiting provider response
+        Confirmed,            // Provider accepted
+        Completed,            // Service finished
+        Cancelled,            // By customer or provider before confirmation
+        Rejected,             // By provider
+        AwaitingConfirmation,
+        PaymentPending,       // Awaiting token payment
+        Expired,              // No provider response within 24h
+        RefundPending         // Marked for refund (optional for flow)
     }
 
     public class Booking
@@ -50,6 +53,21 @@ namespace FixItNepal.Models
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
+
+        // --- Payment & Lifecycle Fields ---
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TokenAmount { get; set; } = 10.00m;
+
+        public bool IsTokenPaid { get; set; } = false;
+
+        public string? ESewaTransactionId { get; set; }
+
+        public DateTime? PaidAt { get; set; }
+        
+        // Expiration for provider response (24 hours after booking creation/payment)
+        public DateTime? ExpiresAt { get; set; }
+
+        // ---------------------------------
 
         public string? CustomerAddress { get; set; }
         public string? CustomerPhone { get; set; }

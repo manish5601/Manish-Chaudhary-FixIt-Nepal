@@ -52,6 +52,10 @@ builder.Services.AddSignalR();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Configure eSewa Service
+builder.Services.Configure<ESewaSettings>(builder.Configuration.GetSection("ESewaSettings"));
+builder.Services.AddScoped<IESewaService, ESewaService>();
+
 var app = builder.Build();
 
 // Seed roles and admin

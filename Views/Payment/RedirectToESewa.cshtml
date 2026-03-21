@@ -1,0 +1,62 @@
+@model FixItNepal.ViewModels.ESewaPaymentViewModel
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Securing Payment - FixIt Nepal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #1e293b;
+        }
+        .loader-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid #f97316;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 2rem;
+        }
+        h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem; color: #0f172a; }
+        p { color: #64748b; font-size: 0.95rem; }
+        @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body onload="setTimeout(() => document.forms['esewa_form'].submit(), 1500)">
+    <div class="loader-card">
+        <div class="spinner"></div>
+        <h2>Preparing Secure Payment</h2>
+        <p>You are being redirected to eSewa to complete your Rs. @Model.TotalAmount token payment.</p>
+        
+        <form action="@Model.BaseUrl" method="POST" id="esewa_form">
+            <input type="hidden" name="amount" value="@Model.Amount" required>
+            <input type="hidden" name="tax_amount" value="@Model.TaxAmount" required>
+            <input type="hidden" name="total_amount" value="@Model.TotalAmount" required>
+            <input type="hidden" name="transaction_uuid" value="@Model.TransactionUuid" required>
+            <input type="hidden" name="product_code" value="@Model.ProductCode" required>
+            <input type="hidden" name="product_service_charge" value="@Model.ProductServiceCharge" required>
+            <input type="hidden" name="product_delivery_charge" value="@Model.ProductDeliveryCharge" required>
+            <input type="hidden" name="success_url" value="@Model.SuccessUrl" required>
+            <input type="hidden" name="failure_url" value="@Model.FailureUrl" required>
+            <input type="hidden" name="signed_field_names" value="@Model.SignedFieldNames" required>
+            <input type="hidden" name="signature" value="@Model.Signature" required>
+        </form>
+    </div>
+</body>
+</html>

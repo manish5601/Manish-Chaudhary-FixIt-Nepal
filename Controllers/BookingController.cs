@@ -16,12 +16,21 @@ namespace FixItNepal.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService;
+        private readonly IESewaService _eSewaService;
+        private readonly ESewaSettings _eSewaSettings;
 
-        public BookingController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService)
+        public BookingController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            IEmailService emailService,
+            IESewaService eSewaService,
+            Microsoft.Extensions.Options.IOptions<ESewaSettings> eSewaSettings)
         {
             _context = context;
             _userManager = userManager;
             _emailService = emailService;
+            _eSewaService = eSewaService;
+            _eSewaSettings = eSewaSettings.Value;
         }
 
         // GET: Booking/Create?serviceId=5&providerId=10
@@ -68,7 +77,7 @@ namespace FixItNepal.Controllers
                 // Since verified API exists, let's use the Context directly but ideally we should use the API/Service.
                 // Keeping it direct for now as per previous pattern.
 
-                var booking = new Booking
+                var bookingInProgress = new Booking
                 {
                     CustomerId = customer.Id,
                     ServiceProviderId = model.ServiceProviderId,
@@ -76,64 +85,35 @@ namespace FixItNepal.Controllers
                     BookingDate = model.BookingDate,
                     StartTime = model.StartTime,
                     EndTime = model.EndTime,
-                    Status = BookingStatus.Pending,
-                    TotalPrice = model.Price, // In real app, calculate based on hours * rate
-                    Notes = model.Notes,
+                    TotalPrice = model.Price,
                     CustomerAddress = model.CustomerAddress,
-                    CustomerPhone = model.CustomerPhone
+                    CustomerPhone = model.CustomerPhone,
+                    Notes = model.Notes,
+                    Status = BookingStatus.PaymentPending, // Wait for payment
+                    TokenAmount = 10.00m,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync(); // Save first to get booking.Id
-                
-                // Add Notification for Provider
-                var providerUser = await _context.ServiceProviders.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == model.ServiceProviderId);
-                if (providerUser != null)
+                _context.Bookings.Add(bookingInProgress);
+                await _context.SaveChangesAsync();
+
+                // Prepare eSewa payment
+                var transactionUuid = $"{bookingInProgress.Id}-{DateTime.UtcNow.Ticks}";
+                var signature = _eSewaService.GenerateSignature(10.00m, transactionUuid, _eSewaSettings.ProductCode);
+
+                var paymentModel = new ESewaPaymentViewModel
                 {
-                    var notif = new Notification
-                    {
-                        UserId = providerUser.UserId,
-                        Title = "New Booking Request",
-                        Message = $"You have a new booking request for {model.ServiceName} on {model.BookingDate.ToShortDateString()}.",
-                        Type = NotificationType.System,
-                        IsRead = false,
-                        CreatedAt = DateTime.UtcNow,
-                        RelatedEntityId = booking.Id,
-                        RelatedEntityType = "Booking"
-                    };
-                    _context.Notifications.Add(notif);
+                    Amount = "10",
+                    TotalAmount = "10",
+                    TransactionUuid = transactionUuid,
+                    ProductCode = _eSewaSettings.ProductCode,
+                    Signature = signature,
+                    BaseUrl = _eSewaSettings.BaseUrl,
+                    SuccessUrl = $"{Request.Scheme}://{Request.Host}/Payment/Success",
+                    FailureUrl = $"{Request.Scheme}://{Request.Host}/Payment/Failure"
+                };
 
-                    // Send Email to Provider
-                    var subject = $"New Booking Request: {model.ServiceName} - FixIt Nepal";
-                    var body = $@"
-                        <div style='font-family: sans-serif; color: #333;'>
-                            <h2 style='color: #0d6efd;'>New Booking Request</h2>
-                            <p>Hello <strong>{providerUser.User.FullName}</strong>,</p>
-                            <p>You have received a new booking request for <strong>{model.ServiceName}</strong>.</p>
-                            <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
-                                <h4 style='margin-top: 0;'>Booking Details:</h4>
-                                <ul style='list-style: none; padding: 0;'>
-                                    <li><strong>Date:</strong> {model.BookingDate.ToShortDateString()}</li>
-                                    <li><strong>Time Slot:</strong> {model.StartTime} - {model.EndTime}</li>
-                                    <li><strong>Total Price:</strong> Rs. {model.Price}</li>
-                                </ul>
-                                <h4 style='margin-top: 15px;'>Customer Details:</h4>
-                                <ul style='list-style: none; padding: 0;'>
-                                    <li><strong>Name:</strong> {customer.User.FullName}</li>
-                                    <li><strong>Phone:</strong> {model.CustomerPhone ?? "N/A"}</li>
-                                    <li><strong>Address:</strong> {model.CustomerAddress ?? "N/A"}</li>
-                                </ul>
-                            </div>
-                            <p>Please login to your dashboard to review and accept the booking.</p>
-                            <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                            <p style='font-size: 0.9em; color: #666;'>Thank you for being part of FixIt Nepal.</p>
-                        </div>
-                    ";
-                    await _emailService.SendEmailAsync(providerUser.User.Email, subject, body);
-                    await _context.SaveChangesAsync();
-                }
-
-                return RedirectToAction("MyBookings");
+                return View("~/Views/Payment/RedirectToESewa.cshtml", paymentModel);
             }
 
             return View(model);
@@ -148,14 +128,26 @@ namespace FixItNepal.Controllers
             if (isProvider)
             {
                  var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == userId);
-                 if (provider == null) return View(new List<Booking>());
+                if (provider == null) return View(new List<Booking>());
 
-                 var bookings = await _context.Bookings
-                     .Include(b => b.Customer).ThenInclude(c => c.User)
-                     .Include(b => b.ServiceItem)
-                     .Where(b => b.ServiceProviderId == provider.Id)
-                     .OrderByDescending(b => b.BookingDate)
-                     .ToListAsync();
+                // Check for Expired Bookings
+                var pendingBookingsList = await _context.Bookings
+                    .Where(b => b.ServiceProviderId == provider.Id && b.Status == BookingStatus.Pending && b.ExpiresAt < DateTime.UtcNow)
+                    .ToListAsync();
+                
+                if (pendingBookingsList.Any())
+                {
+                    foreach(var b in pendingBookingsList) 
+                        b.Status = b.IsTokenPaid ? BookingStatus.RefundPending : BookingStatus.Expired;
+                    await _context.SaveChangesAsync();
+                }
+
+                var bookings = await _context.Bookings
+                    .Include(b => b.Customer).ThenInclude(c => c.User)
+                    .Include(b => b.ServiceItem)
+                    .Where(b => b.ServiceProviderId == provider.Id && b.Status != BookingStatus.PaymentPending) // Hide unpaid bookings from provider
+                    .OrderByDescending(b => b.BookingDate)
+                    .ToListAsync();
                  
                  ViewBag.IsProvider = true;
                  return View(bookings);
@@ -165,16 +157,59 @@ namespace FixItNepal.Controllers
                 var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
                 if (customer == null) return View(new List<Booking>());
 
+                // Check for Expired Bookings (Customer side cleanup)
+                var customerPendingBookings = await _context.Bookings
+                    .Where(b => b.CustomerId == customer.Id && b.Status == BookingStatus.Pending && b.ExpiresAt < DateTime.UtcNow)
+                    .ToListAsync();
+
+                if (customerPendingBookings.Any())
+                {
+                    foreach (var b in customerPendingBookings) 
+                        b.Status = b.IsTokenPaid ? BookingStatus.RefundPending : BookingStatus.Expired;
+                    await _context.SaveChangesAsync();
+                }
+
                 var bookings = await _context.Bookings
                     .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
                     .Include(b => b.ServiceItem)
                     .Where(b => b.CustomerId == customer.Id)
-                    .OrderByDescending(b => b.BookingDate)
+                    .OrderByDescending(b => b.CreatedAt)
                     .ToListAsync();
 
                  ViewBag.IsProvider = false;
                  return View(bookings);
             }
+        }
+
+        // GET: Booking/PayNow/5
+        public async Task<IActionResult> PayNow(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (customer == null) return Unauthorized();
+
+            var booking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == id && b.CustomerId == customer.Id && b.Status == BookingStatus.PaymentPending);
+
+            if (booking == null) return NotFound("Booking not found or not in payment pending state.");
+
+            // Prepare eSewa payment (same logic as in Create)
+            var transactionUuid = $"{booking.Id}-{DateTime.UtcNow.Ticks}";
+            var signature = _eSewaService.GenerateSignature(10.00m, transactionUuid, _eSewaSettings.ProductCode);
+
+            var paymentModel = new ESewaPaymentViewModel
+            {
+                Amount = "10",
+                TotalAmount = "10",
+                TransactionUuid = transactionUuid,
+                ProductCode = _eSewaSettings.ProductCode,
+                Signature = signature,
+                BaseUrl = _eSewaSettings.BaseUrl,
+                SuccessUrl = $"{Request.Scheme}://{Request.Host}/Payment/Success",
+                FailureUrl = $"{Request.Scheme}://{Request.Host}/Payment/Failure"
+            };
+
+            return View("~/Views/Payment/RedirectToESewa.cshtml", paymentModel);
         }
 
         [HttpPost]
@@ -216,7 +251,14 @@ namespace FixItNepal.Controllers
                 }
             }
             
-            booking.Status = status;
+            if (isProvider && status == BookingStatus.Rejected && booking.IsTokenPaid)
+            {
+                booking.Status = BookingStatus.RefundPending;
+            }
+            else
+            {
+                booking.Status = status;
+            }
             
             // Notify other party
             string targetUserId = "";
