@@ -84,7 +84,7 @@ namespace FixItNepal.Controllers
                     ServiceItemId = model.ServiceItemId,
                     BookingDate = model.BookingDate,
                     StartTime = model.StartTime,
-                    EndTime = model.EndTime,
+                    EndTime = model.EndTime == TimeSpan.Zero ? model.StartTime.Add(TimeSpan.FromHours(1)) : model.EndTime,
                     TotalPrice = model.Price,
                     CustomerAddress = model.CustomerAddress,
                     CustomerPhone = model.CustomerPhone,
@@ -347,6 +347,15 @@ namespace FixItNepal.Controllers
             {
                 if (booking.ServiceProvider.UserId != userId) return Forbid();
                 ViewBag.IsProvider = true;
+
+                // Pass existing bookings for schedule visibility
+                ViewBag.ExistingBookings = await _context.Bookings
+                    .Where(b => b.ServiceProviderId == booking.ServiceProviderId && 
+                                b.Id != booking.Id && 
+                                b.BookingDate.Date == booking.BookingDate.Date && 
+                                (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.AwaitingConfirmation || b.Status == BookingStatus.Completed))
+                    .OrderBy(b => b.StartTime)
+                    .ToListAsync();
             }
             else
             {
