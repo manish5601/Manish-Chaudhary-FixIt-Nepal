@@ -22,8 +22,11 @@
                                 <img src="~/uploads/services/@Model.CurrentImageUrl" class="rounded mb-3" style="max-height: 150px;" />
                             }
                             <label asp-for="ImageFile" class="form-label d-block fw-bold text-secondary">Change Image</label>
-                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                            <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" id="serviceImageInput" />
                             <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                            <div class="mt-3" id="servicePreviewContainer" style="display:none;">
+                                <img id="servicePreview" src="" alt="Preview" class="img-fluid rounded shadow-sm" style="max-height:180px;" />
+                            </div>
                         </div>
 
                         <div class="row g-3">
@@ -68,3 +71,21 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('serviceImageInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    document.getElementById('servicePreview').src = ev.target.result;
+                    document.getElementById('servicePreviewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('servicePreviewContainer').style.display = 'none';
+            }
+        });
+    </script>
+}

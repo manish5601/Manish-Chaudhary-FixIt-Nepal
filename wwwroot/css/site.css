@@ -132,6 +132,11 @@ h6,
   color: white !important;
 }
 
+.hover-primary:hover {
+  color: var(--primary-hover) !important;
+  text-decoration: underline !important;
+}
+
 /* Form Controls */
 .form-control,
 .form-select {

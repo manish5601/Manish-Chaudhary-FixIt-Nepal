@@ -94,8 +94,11 @@
                                     {
                                         <div class="col-md-6">
                                             <label asp-for="ProfileImage" class="form-label text-secondary small fw-bold"></label>
-                                            <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                                            <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" id="profileImageInput" />
                                             <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                                            <div class="mt-2" id="profilePreviewContainer" style="display:none;">
+                                                <img id="profilePreview" src="" alt="Preview" class="rounded-circle shadow-sm" style="width:80px;height:80px;object-fit:cover;" />
+                                            </div>
                                         </div>
                                     }
                                     <div class="col-md-6">
@@ -195,6 +198,24 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/maps.js"></script>
+    <script>
+        const profileInput = document.getElementById('profileImageInput');
+        if (profileInput) {
+            profileInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        document.getElementById('profilePreview').src = ev.target.result;
+                        document.getElementById('profilePreviewContainer').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    document.getElementById('profilePreviewContainer').style.display = 'none';
+                }
+            });
+        }
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const latInput = document.getElementById("Latitude");

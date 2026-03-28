@@ -2,11 +2,13 @@ using FixItNepal.Data;
 using FixItNepal.Models;
 using FixItNepal.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,11 +19,13 @@ namespace FixItNepal.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public ServiceRequestController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public ServiceRequestController(UserManager<ApplicationUser> userManager, ApplicationDbContext context, IWebHostEnvironment env)
         {
             _userManager = userManager;
             _context = context;
+            _env = env;
         }
 
         // --- CUSTOMER ACTIONS ---
@@ -48,8 +52,23 @@ namespace FixItNepal.Controllers
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == user.Id);
             if (customer == null) return NotFound("Customer profile not found.");
 
+            // Remove ImageFile from validation (it's optional)
+            ModelState.Remove(nameof(model.ImageFile));
+
             if (ModelState.IsValid)
             {
+                string? imageUrl = null;
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "requests");
+                    Directory.CreateDirectory(uploadsFolder);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.ImageFile.FileName)}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await model.ImageFile.CopyToAsync(stream);
+                    imageUrl = uniqueFileName;
+                }
+
                 var request = new ServiceRequest
                 {
                     CustomerId = customer.Id,
@@ -59,12 +78,38 @@ namespace FixItNepal.Controllers
                     Address = model.Address,
                     Latitude = model.Latitude,
                     Longitude = model.Longitude,
+                    ImageUrl = imageUrl,
                     Status = ServiceRequestStatus.Open
                 };
 
                 _context.ServiceRequests.Add(request);
                 await _context.SaveChangesAsync();
-                
+
+                // Notify all providers in the same category, EXCLUDING the current customer if they are also a provider
+                var categoryProviders = await _context.ServiceProviders
+                    .Where(p => p.ServiceCategoryId == model.ServiceCategoryId 
+                           && p.Status == VerificationStatus.Approved 
+                           && p.UserId != user.Id)
+                    .Select(p => p.UserId)
+                    .ToListAsync();
+
+                foreach (var providerUserId in categoryProviders)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserId = providerUserId,
+                        Title = "New Job Available!",
+                        Message = $"A new job has been posted in your category: \"{request.Title}\". Be the first to bid!",
+                        Type = NotificationType.System,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow,
+                        RelatedEntityId = request.Id,
+                        RelatedEntityType = "ServiceRequest"
+                    });
+                }
+                if (categoryProviders.Any())
+                    await _context.SaveChangesAsync();
+
                 TempData["SuccessMessage"] = "Your request has been posted! Providers in this category will be notified.";
                 return RedirectToAction(nameof(MyRequests));
             }
@@ -99,6 +144,7 @@ namespace FixItNepal.Controllers
                 Address = request.Address,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
+                ExistingImageUrl = request.ImageUrl,
                 Categories = categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
             };
 
@@ -120,6 +166,8 @@ namespace FixItNepal.Controllers
             if (request == null) return NotFound();
             if (request.Bids.Any()) return Forbid(); // Should not happen via UI
 
+            ModelState.Remove(nameof(model.ImageFile));
+
             if (ModelState.IsValid)
             {
                 request.Title = model.Title;
@@ -129,6 +177,18 @@ namespace FixItNepal.Controllers
                 request.Latitude = model.Latitude;
                 request.Longitude = model.Longitude;
 
+                // Handle image upload (replace or keep existing)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "requests");
+                    Directory.CreateDirectory(uploadsFolder);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(model.ImageFile.FileName)}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await model.ImageFile.CopyToAsync(stream);
+                    request.ImageUrl = uniqueFileName;
+                }
+
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Your request has been updated successfully.";
                 return RedirectToAction(nameof(Details), new { id = request.Id });
@@ -136,6 +196,7 @@ namespace FixItNepal.Controllers
 
             var categories = await _context.ServiceCategories.Where(c => c.IsActive).ToListAsync();
             model.Categories = categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name });
+            model.ExistingImageUrl = request.ImageUrl;
             ViewBag.RequestId = id;
             return View(model);
         }
