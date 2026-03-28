@@ -14,6 +14,7 @@ namespace FixItNepal.ViewModels
         public int CompletedBookings { get; set; }
         public int CancelledBookings { get; set; }
         public int PendingBookings { get; set; }
+        public int PendingRefunds { get; set; }
 
         // Financial Stats
         public decimal TotalRevenue { get; set; }

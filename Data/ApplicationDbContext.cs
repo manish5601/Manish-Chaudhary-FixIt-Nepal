@@ -22,6 +22,8 @@ namespace FixItNepal.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Dispute> Disputes { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ServiceRequest> ServiceRequests { get; set; }
+        public DbSet<ServiceBid> ServiceBids { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -113,6 +115,39 @@ namespace FixItNepal.Data
                 .HasOne(m => m.Receiver)
                 .WithMany()
                 .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ServiceRequest Relationships
+            builder.Entity<ServiceRequest>()
+                .HasOne(r => r.Customer)
+                .WithMany()
+                .HasForeignKey(r => r.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ServiceRequest>()
+                .HasOne(r => r.ServiceCategory)
+                .WithMany()
+                .HasForeignKey(r => r.ServiceCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ServiceBid Relationships
+            builder.Entity<ServiceBid>()
+                .HasOne(b => b.ServiceRequest)
+                .WithMany(r => r.Bids)
+                .HasForeignKey(b => b.ServiceRequestId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ServiceBid>()
+                .HasOne(b => b.ServiceProvider)
+                .WithMany()
+                .HasForeignKey(b => b.ServiceProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Booking to ServiceRequest Relationship
+            builder.Entity<Booking>()
+                .HasOne(b => b.ServiceRequest)
+                .WithMany()
+                .HasForeignKey(b => b.ServiceRequestId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

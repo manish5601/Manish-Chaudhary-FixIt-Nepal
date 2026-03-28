@@ -1,0 +1,100 @@
+@model IEnumerable<FixItNepal.Models.ServiceRequest>
+@{
+    ViewData["Title"] = "My Requests";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-primary-custom"><i class="bi bi-list-task me-2"></i>My Custom Requests</h3>
+        <a asp-action="Create" class="btn btn-primary rounded-pill shadow-sm"><i class="bi bi-plus-circle me-2"></i>Post New Request</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center p-5 bg-white rounded-3 shadow-sm border mt-4">
+            <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+            <h5>No requests found</h5>
+            <p class="text-secondary">You haven't posted any custom service requests yet.</p>
+            <a asp-action="Create" class="btn btn-outline-primary mt-2">Post a Request</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mt-2">
+            @foreach (var request in Model)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border-0 h-100 request-card">
+                        <div class="card-body p-4 position-relative">
+                            
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <span class="badge bg-light text-primary border border-primary-subtle mb-2">@request.ServiceCategory.Name</span>
+                                    <h5 class="card-title fw-bold mb-1">@request.Title</h5>
+                                </div>
+                                @switch(request.Status)
+                                {
+                                    case FixItNepal.Models.ServiceRequestStatus.Open:
+                                        <span class="badge bg-success">Open for Bids</span>
+                                        break;
+                                    case FixItNepal.Models.ServiceRequestStatus.Bidding:
+                                        <span class="badge bg-warning text-dark">Bids Received</span>
+                                        break;
+                                    case FixItNepal.Models.ServiceRequestStatus.Accepted:
+                                        <span class="badge bg-info">Accepted / Booking Pending</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@request.Status</span>
+                                        break;
+                                }
+                            </div>
+                            
+                            <p class="text-secondary small mt-2 text-truncate-2">@request.Description</p>
+                            
+                            <div class="d-flex align-items-center text-muted small mt-3">
+                                <i class="bi bi-geo-alt text-primary me-2"></i> @(string.IsNullOrEmpty(request.Address) ? "Location provided via map" : request.Address)
+                            </div>
+                            <div class="d-flex align-items-center text-muted small mt-1">
+                                <i class="bi bi-clock text-primary me-2"></i> Posted @request.CreatedAt.ToString("MMM dd, yyyy")
+                            </div>
+                            
+                            <hr class="my-3 text-muted">
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold fs-5 text-dark">@request.Bids.Count</span>
+                                    <span class="text-secondary small ms-1">Bids</span>
+                                </div>
+                                <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+.request-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.request-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

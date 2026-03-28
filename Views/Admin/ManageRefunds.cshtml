@@ -1,0 +1,114 @@
+@model IEnumerable<FixItNepal.Models.Booking>
+@{
+    ViewData["Title"] = "Manage Refunds";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-orange fw-bold">Manage eSewa Refunds</h2>
+            <p class="text-muted">Process and track Rs. 10 token refunds for rejected or expired bookings.</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Booking ID</th>
+                            <th>Customer</th>
+                            <th>Refund Amount</th>
+                            <th>eSewa Transaction ID</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">#@item.Id</td>
+                                    <td>
+                                        <div class="fw-bold">@item.Customer.User.FullName</div>
+                                        <div class="small text-muted">@item.Customer.User.Email</div>
+                                    </td>
+                                    <td><span class="badge bg-danger-subtle text-danger">Rs. @item.TokenAmount</span></td>
+                                    <td>
+                                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                                            <input type="text" class="form-control bg-light border-0" value="@item.ESewaTransactionId" readonly id="tx-@item.Id">
+                                            <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard('tx-@item.Id')">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <form asp-action="CompleteRefund" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3" onclick="return confirm('Have you processed this refund on the eSewa Merchant Portal?')">
+                                                Mark as Refunded
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-check2-circle fs-1 d-block mb-3 text-success"></i>
+                                    All clear! No pending refunds at the moment.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 p-4 bg-primary-subtle rounded-4 text-primary border border-primary-subtle">
+        <h5 class="fw-bold"><i class="bi bi-info-circle-fill me-2"></i>How to process a refund?</h5>
+        <ol class="mb-0">
+            <li>Log in to your <strong>eSewa Merchant Dashboard</strong>.</li>
+            <li>Copy the <strong>eSewa Transaction ID</strong> from the table above.</li>
+            <li>Search for the transaction on eSewa and click <strong>"Refund"</strong>.</li>
+            <li>Once success confirmed on eSewa, click <strong>"Mark as Refunded"</strong> here to notify the customer.</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    function copyToClipboard(id) {
+        var copyText = document.getElementById(id);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        
+        // Visual feedback
+        const btn = copyText.nextElementSibling;
+        const icon = btn.querySelector('i');
+        icon.classList.replace('bi-clipboard', 'bi-check-lg');
+        setTimeout(() => icon.classList.replace('bi-check-lg', 'bi-clipboard'), 2000);
+    }
+</script>
+
+<style>
+    .text-orange { color: #fd7e14; }
+    .bg-light { background-color: #f8f9fa !important; }
+</style>

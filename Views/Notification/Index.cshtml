@@ -31,6 +31,10 @@
                 {
                     redirectUrl = Url.Action("Details", "Booking", new { id = item.RelatedEntityId.Value });
                 }
+                else if (item.RelatedEntityType == "ServiceRequest" && item.RelatedEntityId.HasValue)
+                {
+                    redirectUrl = Url.Action("Details", "ServiceRequest", new { id = item.RelatedEntityId.Value });
+                }
                 else if (item.Message.Contains("Booking"))
                 {
                     // Fallback for old notifications

@@ -1,4 +1,4 @@
-﻿@using FixItNepal.Models
+@using FixItNepal.Models
 @{
     ViewData["Title"] = "Provider Dashboard";
     var status = (VerificationStatus)ViewBag.Status;
@@ -68,11 +68,10 @@
          <div class="col">
              <div class="card shadow-sm border-0 h-100">
                 <div class="card-body p-4 text-center">
-                    <i class="bi bi-clock-history fs-1 text-primary mb-3"></i>
-                    <h5 class="fw-bold">Availability</h5>
-                    <p class="text-muted small">Set working hours</p>
-                     <!-- Placeholder until Availability UI is separate, using Profile for now or we can add a link later -->
-                    <button class="btn btn-outline-secondary btn-sm rounded-pill w-100" disabled>Coming Soon</button>
+                    <i class="bi bi-shop fs-1 text-primary mb-3"></i>
+                    <h5 class="fw-bold">Marketplace</h5>
+                    <p class="text-muted small">Find custom jobs</p>
+                    <a asp-controller="ServiceRequest" asp-action="Marketplace" class="btn btn-outline-primary btn-sm rounded-pill w-100 stretched-link">Browse Jobs</a>
                 </div>
             </div>
         </div>

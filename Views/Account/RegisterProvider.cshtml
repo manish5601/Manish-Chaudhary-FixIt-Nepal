@@ -112,24 +112,58 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
-    <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&libraries=places"></script>
+    <script src="~/js/maps.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const addressInput = document.getElementById("Address");
             const latInput = document.getElementById("Latitude");
             const lngInput = document.getElementById("Longitude");
+            const addressInput = document.getElementById("Address");
 
-            if (google.maps.places) {
-                const autocomplete = new google.maps.places.Autocomplete(addressInput);
-                autocomplete.addListener("place_changed", () => {
-                    const place = autocomplete.getPlace();
-                    if (place.geometry) {
-                        latInput.value = place.geometry.location.lat();
-                        lngInput.value = place.geometry.location.lng();
+            // Add a search button after address input
+            const searchBtn = document.createElement("button");
+            searchBtn.type = "button";
+            searchBtn.className = "btn btn-sm btn-outline-secondary mt-1";
+            searchBtn.innerHTML = '<i class="bi bi-search me-1"></i>Search on Map';
+            addressInput.parentNode.appendChild(searchBtn);
+
+            // Create a container for the map if it doesn't exist
+            const mapContainer = document.createElement("div");
+            mapContainer.id = "regMap";
+            mapContainer.style.height = "250px";
+            mapContainer.className = "rounded-3 shadow-sm mb-3 mt-2";
+            addressInput.parentNode.appendChild(mapContainer);
+
+            const mapService = new LeafletMapService("regMap", { zoom: 12 });
+            
+            setTimeout(() => {
+                mapService.init();
+
+                if (mapService.map) {
+                    mapService.map.invalidateSize();
+                }
+
+                searchBtn.onclick = () => {
+                    const query = addressInput.value;
+                    if (query) {
+                        mapService.searchLocation(query, (result) => {
+                            latInput.value = result.lat;
+                            lngInput.value = result.lng;
+                        });
                     }
+                };
+
+                // Attach listeners AFTER map is initialized
+                mapService.enableClickToPick((lat, lng) => {
+                    latInput.value = lat;
+                    lngInput.value = lng;
                 });
-            }
+
+                // Try to get current location initially
+                mapService.getCurrentLocation((pos) => {
+                    latInput.value = pos.lat;
+                    lngInput.value = pos.lng;
+                });
+            }, 500);
         });
     </script>
 }

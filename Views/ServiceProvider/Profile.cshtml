@@ -194,75 +194,54 @@
         </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
-    <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&libraries=places"></script>
+    <script src="~/js/maps.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const addressInput = document.getElementById("Address");
             const latInput = document.getElementById("Latitude");
             const lngInput = document.getElementById("Longitude");
+            const addressInput = document.getElementById("Address");
+
+            // Add search button
+            const searchBtn = document.createElement("button");
+            searchBtn.type = "button";
+            searchBtn.className = "btn btn-sm btn-outline-secondary mt-1";
+            searchBtn.innerHTML = '<i class="bi bi-search me-1"></i>Search on Map';
+            addressInput.parentNode.appendChild(searchBtn);
             
-            // Map Setup
-            let map, marker;
             // Default Kathmandu if no location
             let initialLat = @(Model.Latitude.HasValue ? Model.Latitude.Value : 27.7172);
             let initialLng = @(Model.Longitude.HasValue ? Model.Longitude.Value : 85.3240);
 
-            function initMap() {
-                const mapEl = document.getElementById("locationMap");
-                if(!mapEl) return;
+            const mapService = new LeafletMapService("locationMap", { 
+                center: [initialLat, initialLng], 
+                zoom: 15 
+            });
 
-                map = new google.maps.Map(mapEl, {
-                    center: { lat: initialLat, lng: initialLng },
-                    zoom: 13
-                });
+            setTimeout(() => {
+                mapService.init();
 
-                marker = new google.maps.Marker({
-                    position: { lat: initialLat, lng: initialLng },
-                    map: map,
-                    draggable: true,
-                    title: "Drag to set location"
-                });
+                if (mapService.map) {
+                    mapService.map.invalidateSize();
+                }
 
-                // Update hidden inputs when marker is dragged
-                marker.addListener("dragend", () => {
-                    const pos = marker.getPosition();
-                    latInput.value = pos.lat();
-                    lngInput.value = pos.lng();
-                });
+                // Add initial marker AFTER map is initialized
+                mapService.addMarker(initialLat, initialLng, "My Location");
 
-                // Update marker when map is clicked
-                map.addListener("click", (e) => {
-                    const pos = e.latLng;
-                    marker.setPosition(pos);
-                    latInput.value = pos.lat();
-                    lngInput.value = pos.lng();
-                });
-            }
-
-            if (google.maps.places) {
-                const autocomplete = new google.maps.places.Autocomplete(addressInput);
-                autocomplete.addListener("place_changed", () => {
-                    const place = autocomplete.getPlace();
-                    if (place.geometry) {
-                        const lat = place.geometry.location.lat();
-                        const lng = place.geometry.location.lng();
-                        
-                        latInput.value = lat;
-                        lngInput.value = lng;
-                        
-                        // Update Map
-                        if(map && marker) {
-                            const pos = {lat: lat, lng: lng};
-                            map.setCenter(pos);
-                            marker.setPosition(pos);
-                            map.setZoom(15);
-                        }
+                searchBtn.onclick = () => {
+                    const query = addressInput.value;
+                    if (query) {
+                        mapService.searchLocation(query, (result) => {
+                            latInput.value = result.lat;
+                            lngInput.value = result.lng;
+                        });
                     }
+                };
+
+                mapService.enableClickToPick((lat, lng) => {
+                    latInput.value = lat;
+                    lngInput.value = lng;
                 });
-            }
-            
-            initMap();
+            }, 500);
         });
     </script>
 }

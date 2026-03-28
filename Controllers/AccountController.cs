@@ -1,8 +1,10 @@
-﻿using FixItNepal.Models;
+using FixItNepal.Models;
 using FixItNepal.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using System.IO;
+using FixItNepal.Services;
 using ServiceProviderModel = FixItNepal.Models.ServiceProvider;
 
 namespace FixItNepal.Controllers
@@ -12,14 +14,17 @@ namespace FixItNepal.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly Data.ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
         public AccountController(UserManager<ApplicationUser> userManager,
                                  SignInManager<ApplicationUser> signInManager,
-                                 Data.ApplicationDbContext context)
+                                 Data.ApplicationDbContext context,
+                                 IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
+            _emailService = emailService;
         }
 
         // GET: /Account/Register
@@ -295,6 +300,93 @@ namespace FixItNepal.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        // GET: /Account/ForgotPassword
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // POST: /Account/ForgotPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction("ForgotPasswordConfirmation");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, token = token }, protocol: Request.Scheme);
+
+            var subject = "Reset Password - FixIt Nepal";
+            var body = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #fd7e14;'>Reset Your Password</h2>
+                    <p>Hello {user.FullName},</p>
+                    <p>We received a request to reset the password for your FixIt Nepal account. Click the button below to set a new password:</p>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='{callbackUrl}' style='background-color: #fd7e14; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Reset Password</a>
+                    </div>
+                    <p>If you did not request a password reset, please ignore this email.</p>
+                    <p style='color: #888; font-size: 12px;'>This link will expire in 24 hours.</p>
+                </div>";
+
+            await _emailService.SendEmailAsync(model.Email, subject, body);
+
+            return RedirectToAction("ForgotPasswordConfirmation");
+        }
+
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // GET: /Account/ResetPassword
+        public IActionResult ResetPassword(string? token = null, string? userId = null)
+        {
+            if (token == null || userId == null) return BadRequest("A token and user ID must be supplied for password reset.");
+            
+            var model = new ResetPasswordViewModel { Token = token, UserId = userId };
+            return View(model);
+        }
+
+        // POST: /Account/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                return RedirectToAction("ResetPasswordConfirmation");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return View(model);
+        }
+
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
     }
 }

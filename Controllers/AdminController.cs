@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FixItNepal.Models;
@@ -36,6 +36,7 @@ namespace FixItNepal.Controllers
             var completedBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Completed);
             var pendingBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Pending);
             var cancelledBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.Cancelled);
+            var refundPendingBookings = await _context.Bookings.CountAsync(b => b.Status == BookingStatus.RefundPending);
 
             // Revenue (Only from completed bookings)
             var totalRevenue = await _context.Bookings
@@ -119,6 +120,7 @@ namespace FixItNepal.Controllers
                 CompletedBookings = completedBookings,
                 PendingBookings = pendingBookings,
                 CancelledBookings = cancelledBookings,
+                PendingRefunds = refundPendingBookings, // Need to add this to ViewModel or use ViewBag
                 TotalRevenue = totalRevenue,
                 TopCategories = topCategories,
                 TopProviders = topProviders,
@@ -506,6 +508,52 @@ namespace FixItNepal.Controllers
 
             ViewBag.AdminView = true;
             return View("~/Views/ServiceProvider/Profile.cshtml", model);
+        }
+
+        // GET: /Admin/ManageRefunds
+        public async Task<IActionResult> ManageRefunds()
+        {
+            var refundPending = await _context.Bookings
+                .Include(b => b.Customer).ThenInclude(c => c.User)
+                .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
+                .Include(b => b.ServiceItem)
+                .Where(b => b.Status == BookingStatus.RefundPending)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            return View(refundPending);
+        }
+
+        // POST: /Admin/CompleteRefund/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteRefund(int id)
+        {
+            var booking = await _context.Bookings.Include(b => b.Customer).Include(b => b.ServiceProvider).FirstOrDefaultAsync(b => b.Id == id);
+            if (booking == null) return NotFound();
+
+            if (booking.Status != BookingStatus.RefundPending)
+            {
+                TempData["ErrorMessage"] = "This booking is not in Refund Pending state.";
+                return RedirectToAction(nameof(ManageRefunds));
+            }
+
+            booking.Status = BookingStatus.Refunded;
+            await _context.SaveChangesAsync();
+
+            // Notify Customer
+            _context.Notifications.Add(new Notification
+            {
+                UserId = booking.Customer.UserId,
+                Title = "Refund Completed",
+                Message = $"Your token refund of Rs. {booking.TokenAmount} for Booking #{booking.Id} has been processed successfully.",
+                RelatedEntityId = booking.Id,
+                RelatedEntityType = "Booking"
+            });
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Refund marked as completed.";
+            return RedirectToAction(nameof(ManageRefunds));
         }
     }
 }

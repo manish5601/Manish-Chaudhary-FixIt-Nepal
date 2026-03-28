@@ -23,21 +23,16 @@
 
                         <div class="mb-3">
                             <label asp-for="BookingDate" class="form-label fw-bold">Select Date</label>
-                            <input asp-for="BookingDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" id="bookingDateInput" value="@Model.BookingDate.ToString("yyyy-MM-dd")" />
+                            <input asp-for="BookingDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" id="bookingDateInput" value="@Model.BookingDate.ToString("yyyy-MM-dd")" required />
                             <span asp-validation-for="BookingDate" class="text-danger"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Available Time Slots</label>
-                            <select id="timeSlotSelect" class="form-select" disabled>
-                                <option value="">Select a date first</option>
-                            </select>
-                            <small class="text-muted" id="slotStatus"></small>
+                        <div class="mb-4">
+                            <label asp-for="StartTime" class="form-label fw-bold">Preferred Time</label>
+                            <input asp-for="StartTime" type="time" class="form-control" required />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                            <div class="form-text small">Please select the approximate time for the service to start.</div>
                         </div>
-                        
-                        <!-- Hidden inputs for model binding -->
-                        <input type="hidden" asp-for="StartTime" id="startTimeInput" />
-                        <input type="hidden" asp-for="EndTime" id="endTimeInput" />
 
                         <div class="mb-3">
                             <label asp-for="Notes" class="form-label fw-bold">Notes / Description of Problem</label>
@@ -58,7 +53,7 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>Confirm Booking</button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Confirm Booking</button>
                             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
                         </div>
                     </form>
@@ -73,110 +68,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('bookingDateInput');
-            const providerId = document.getElementById('providerId').value;
-            const slotSelect = document.getElementById('timeSlotSelect');
-            const slotStatus = document.getElementById('slotStatus');
-            const startTimeInput = document.getElementById('startTimeInput');
-            const endTimeInput = document.getElementById('endTimeInput');
-            const submitBtn = document.getElementById('submitBtn');
-
-            function fetchSlots() {
-                const date = dateInput.value;
-                if (!date) return;
-
-                slotSelect.disabled = true;
-                submitBtn.disabled = true;
-                slotSelect.innerHTML = '<option>Loading...</option>';
-                slotStatus.innerText = '';
-
-                fetch(`/api/BookingApi/slots/${providerId}/${date}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        slotSelect.innerHTML = '';
-                        // data has { bookings: [], availability: { startTime, endTime, isDayOff... } }
-                        
-                        if (!data.availability || data.availability.isDayOff) {
-                             slotStatus.innerText = 'Provider is not available on this day.';
-                             slotStatus.className = 'text-danger';
-                             return;
-                        }
-
-                        // Generate slots from StartTime to EndTime (assuming 1 hour duration for now)
-                        const start = parseTime(data.availability.startTime);
-                        const end = parseTime(data.availability.endTime);
-                        const duration = 60; // minutes
-
-                        let current = start;
-                        let validSlots = 0;
-
-                        while (current + duration <= end) {
-                            // Check overlap with bookings
-                            const slotEnd = current + duration;
-                            const isBooked = data.bookings.some(b => {
-                                const bStart = parseTime(b.start);
-                                const bEnd = parseTime(b.end);
-                                return (current < bEnd && slotEnd > bStart);
-                            });
-
-                            if (!isBooked) {
-                                const opt = document.createElement('option');
-                                opt.value = formatTime(current);
-                                opt.text = formatTime(current) + ' - ' + formatTime(slotEnd);
-                                opt.dataset.end = formatTime(slotEnd);
-                                slotSelect.appendChild(opt);
-                                validSlots++;
-                            }
-                            
-                            current += duration;
-                        }
-
-                        if (validSlots > 0) {
-                            slotSelect.disabled = false;
-                            slotStatus.innerText = '';
-                            // Auto select first
-                             updateHiddenInputs();
-                        } else {
-                            slotSelect.innerHTML = '<option>No slots available</option>';
-                             slotStatus.innerText = 'All slots are booked.';
-                             slotStatus.className = 'text-danger';
-                        }
-                    })
-                    .catch(e => {
-                        console.error(e);
-                        slotStatus.innerText = 'Error loading slots.';
-                    });
-            }
-
-            function updateHiddenInputs() {
-                if(slotSelect.selectedIndex >= 0) {
-                     const selected = slotSelect.options[slotSelect.selectedIndex];
-                     startTimeInput.value = selected.value + ":00"; // Format HH:mm:ss for TimeSpan
-                     endTimeInput.value = selected.dataset.end + ":00";
-                     submitBtn.disabled = false;
-                }
-            }
-
-            // Helpers for Time manipulation (Simple minutes from midnight)
-            function parseTime(timeStr) {
-                // timeStr is HH:mm:ss
-                const parts = timeStr.split(':');
-                return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-            }
-
-            function formatTime(minutes) {
-                const h = Math.floor(minutes / 60).toString().padStart(2, '0');
-                const m = (minutes % 60).toString().padStart(2, '0');
-                return `${h}:${m}`;
-            }
-
-            dateInput.addEventListener('change', fetchSlots);
-            slotSelect.addEventListener('change', updateHiddenInputs);
-
-            // Initial auto-fetch if val present
-            if(dateInput.value) {
-                fetchSlots();
-            }
+            // Focus on required inputs
         });
     </script>
 }

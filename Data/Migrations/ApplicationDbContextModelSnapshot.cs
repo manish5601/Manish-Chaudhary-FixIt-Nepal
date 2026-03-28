@@ -143,10 +143,13 @@ namespace FixItNepal.Data.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ServiceItemId")
+                    b.Property<int?>("ServiceItemId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ServiceRequestId")
                         .HasColumnType("int");
 
                     b.Property<TimeSpan>("StartTime")
@@ -168,6 +171,8 @@ namespace FixItNepal.Data.Migrations
                     b.HasIndex("ServiceItemId");
 
                     b.HasIndex("ServiceProviderId");
+
+                    b.HasIndex("ServiceRequestId");
 
                     b.ToTable("Bookings", (string)null);
                 });
@@ -442,6 +447,51 @@ namespace FixItNepal.Data.Migrations
                     b.ToTable("Reviews", (string)null);
                 });
 
+            modelBuilder.Entity("FixItNepal.Models.ServiceBid", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerCounterMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("CustomerCounterPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("EstimatedTime")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ProposedPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ServiceProviderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceProviderId");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.ToTable("ServiceBids");
+                });
+
             modelBuilder.Entity("FixItNepal.Models.ServiceCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -568,6 +618,53 @@ namespace FixItNepal.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ServiceProviders", (string)null);
+                });
+
+            modelBuilder.Entity("FixItNepal.Models.ServiceRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("ServiceCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ServiceCategoryId");
+
+                    b.ToTable("ServiceRequests");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -714,8 +811,7 @@ namespace FixItNepal.Data.Migrations
                     b.HasOne("FixItNepal.Models.ServiceItem", "ServiceItem")
                         .WithMany()
                         .HasForeignKey("ServiceItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FixItNepal.Models.ServiceProvider", "ServiceProvider")
                         .WithMany()
@@ -723,11 +819,18 @@ namespace FixItNepal.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FixItNepal.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany()
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Customer");
 
                     b.Navigation("ServiceItem");
 
                     b.Navigation("ServiceProvider");
+
+                    b.Navigation("ServiceRequest");
                 });
 
             modelBuilder.Entity("FixItNepal.Models.ChatMessage", b =>
@@ -845,6 +948,25 @@ namespace FixItNepal.Data.Migrations
                     b.Navigation("ServiceProvider");
                 });
 
+            modelBuilder.Entity("FixItNepal.Models.ServiceBid", b =>
+                {
+                    b.HasOne("FixItNepal.Models.ServiceProvider", "ServiceProvider")
+                        .WithMany()
+                        .HasForeignKey("ServiceProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FixItNepal.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany("Bids")
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ServiceProvider");
+
+                    b.Navigation("ServiceRequest");
+                });
+
             modelBuilder.Entity("FixItNepal.Models.ServiceItem", b =>
                 {
                     b.HasOne("FixItNepal.Models.ServiceCategory", "ServiceCategory")
@@ -873,6 +995,25 @@ namespace FixItNepal.Data.Migrations
                     b.Navigation("ServiceCategory");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FixItNepal.Models.ServiceRequest", b =>
+                {
+                    b.HasOne("FixItNepal.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FixItNepal.Models.ServiceCategory", "ServiceCategory")
+                        .WithMany()
+                        .HasForeignKey("ServiceCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ServiceCategory");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -946,6 +1087,11 @@ namespace FixItNepal.Data.Migrations
             modelBuilder.Entity("FixItNepal.Models.ServiceProvider", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("FixItNepal.Models.ServiceRequest", b =>
+                {
+                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }

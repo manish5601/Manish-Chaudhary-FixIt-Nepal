@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FixItNepal.Models.ServiceCategory>
+@model IEnumerable<FixItNepal.Models.ServiceCategory>
 @{
     ViewData["Title"] = "Home Page";
 }
@@ -164,81 +164,108 @@
     <script src="~/js/maps.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const mapService = new GoogleMapService("homeMap");
-            mapService.init();
+            console.log("FIXITNEPAL: Scripts loading...");
+            const defaultCenter = [27.7172, 85.3240];
+            const mapService = new LeafletMapService("homeMap", { center: defaultCenter, zoom: 13 });
+            window.homeMapService = mapService;
             
             let currentLat = null;
             let currentLng = null;
-
-            // Initial Load
-            mapService.loadProviders('/api/Maps/providers');
-
-            // Autocomplete Setup
             const input = document.getElementById("locationSearch");
-            // Check if google maps libraries are loaded
-            if (google.maps.places) {
-                const autocomplete = new google.maps.places.Autocomplete(input);
-                autocomplete.addListener("place_changed", () => {
-                    const place = autocomplete.getPlace();
-                    if (place.geometry) {
-                        currentLat = place.geometry.location.lat();
-                        currentLng = place.geometry.location.lng();
-                        
-                        mapService.map.setCenter({lat: currentLat, lng: currentLng});
-                        mapService.map.setZoom(14);
-                        
-                        // Add marker for selected location
-                        if (mapService.userMarker) mapService.userMarker.setMap(null);
-                        mapService.userMarker = new google.maps.Marker({
-                            position: {lat: currentLat, lng: currentLng},
-                            map: mapService.map,
-                            title: "Selected Location",
-                            icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-                        });
-
-                        loadWithFilters();
-                    }
-                });
-            }
 
             function loadWithFilters() {
-                const radius = document.getElementById("distanceFilter").value;
-                const minRating = document.getElementById("ratingFilter").value;
+                const query = input.value;
+                console.log("FIXITNEPAL: Running loadWithFilters for", query);
                 
+                if (!query || query === "My Current Location" || query.startsWith("Location:")) {
+                    fetchProviders();
+                } else {
+                    mapService.searchLocation(query, (result) => {
+                        currentLat = result.lat;
+                        currentLng = result.lng;
+                        fetchProviders();
+                    });
+                }
+            }
+
+            function fetchProviders() {
+                console.log("FIXITNEPAL: fetchProviders starting...");
+                const radiusEl = document.getElementById("distanceFilter");
+                const ratingEl = document.getElementById("ratingFilter");
+                if (!radiusEl || !ratingEl) return;
+
                 const params = {
-                    radius: radius,
-                    minRating: minRating
+                    radius: radiusEl.value,
+                    minRating: ratingEl.value
                 };
                 
                 if (currentLat && currentLng) {
                     params.lat = currentLat;
                     params.lng = currentLng;
                 } else if (mapService.map) {
-                     // Fallback to map center if user hasn't selected a location
                     const center = mapService.map.getCenter();
-                    params.lat = center.lat();
-                    params.lng = center.lng();
+                    params.lat = center.lat;
+                    params.lng = center.lng;
                 }
                 
+                console.log("FIXITNEPAL: Fetching with", params);
                 mapService.loadProviders('/api/Maps/providers', params);
             }
 
-            document.getElementById("applyFilters").addEventListener("click", loadWithFilters);
-            document.getElementById("distanceFilter").addEventListener("change", loadWithFilters);
-            document.getElementById("ratingFilter").addEventListener("change", loadWithFilters);
-
-            document.getElementById("useMyLocation").addEventListener("click", function() {
-                const btn = this;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Locating...';
-                
-                mapService.getCurrentLocation((pos) => {
-                    currentLat = pos.lat;
-                    currentLng = pos.lng;
-                    btn.innerHTML = originalText;
+            // Attach listeners immediately
+            const btnApply = document.getElementById("applyFilters");
+            if (btnApply) {
+                btnApply.onclick = () => {
+                    console.log("FIXITNEPAL: Apply Filters Clicked");
                     loadWithFilters();
-                });
+                };
+            }
+
+            const btnLocate = document.getElementById("useMyLocation");
+            if (btnLocate) {
+                btnLocate.onclick = function() {
+                    console.log("FIXITNEPAL: Use My Location Clicked");
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Locating...';
+                    
+                    mapService.getCurrentLocation((pos) => {
+                        console.log("FIXITNEPAL: Location found", pos);
+                        currentLat = pos.lat;
+                        currentLng = pos.lng;
+                        input.value = "My Current Location";
+                        btn.innerHTML = originalText;
+                        loadWithFilters();
+                    });
+                };
+            }
+
+            // Change listeners
+            ["distanceFilter", "ratingFilter"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.onchange = loadWithFilters;
             });
+
+            // Initialize Map with 500ms delay to ensure container is ready
+            setTimeout(() => {
+                console.log("FIXITNEPAL: Initializing map...");
+                mapService.init();
+                
+                if (mapService.map) {
+                    mapService.map.invalidateSize();
+                    
+                    mapService.enableClickToPick((lat, lng) => {
+                        console.log("FIXITNEPAL: Map clicked at", lat, lng);
+                        currentLat = lat;
+                        currentLng = lng;
+                        input.value = `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        loadWithFilters();
+                    });
+                }
+
+                console.log("FIXITNEPAL: Running initial provider load");
+                mapService.loadProviders('/api/Maps/providers');
+            }, 600);
         });
     </script>
 }

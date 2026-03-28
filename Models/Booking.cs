@@ -14,7 +14,8 @@ namespace FixItNepal.Models
         AwaitingConfirmation,
         PaymentPending,       // Awaiting token payment
         Expired,              // No provider response within 24h
-        RefundPending         // Marked for refund (optional for flow)
+        RefundPending,        // Marked for refund (optional for flow)
+        Refunded
     }
 
     public class Booking
@@ -34,11 +35,15 @@ namespace FixItNepal.Models
         [ForeignKey("ServiceProviderId")]
         public ServiceProvider ServiceProvider { get; set; } = null!;
 
-        [Required]
-        public int ServiceItemId { get; set; }
-
+        public int? ServiceItemId { get; set; }
+ 
         [ForeignKey("ServiceItemId")]
-        public ServiceItem ServiceItem { get; set; } = null!;
+        public ServiceItem? ServiceItem { get; set; }
+ 
+        public int? ServiceRequestId { get; set; }
+ 
+        [ForeignKey("ServiceRequestId")]
+        public ServiceRequest? ServiceRequest { get; set; }
 
         [Required]
         public DateTime BookingDate { get; set; }

@@ -1,0 +1,107 @@
+@model FixItNepal.ViewModels.ServiceRequestViewModel
+@{
+    ViewData["Title"] = "Post a Request";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h4 class="mb-0 text-primary-custom"><i class="bi bi-megaphone me-2"></i>Post a Custom Request</h4>
+                    <p class="text-secondary small mb-0 mt-1">Describe your problem, and providers will bid on the job.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold small text-secondary"></label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g., Pipe burst in kitchen" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ServiceCategoryId" class="form-label fw-bold small text-secondary"></label>
+                            <select asp-for="ServiceCategoryId" asp-items="Model.Categories" class="form-select">
+                                <option value="">-- Select a Category --</option>
+                            </select>
+                            <span asp-validation-for="ServiceCategoryId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold small text-secondary"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Please provide as much detail as possible so providers can give accurate bids..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="my-4" />
+                        <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-primary"></i>Service Location</h6>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-bold small text-secondary"></label>
+                            <div class="input-group">
+                                <input asp-for="Address" class="form-control" id="Address" placeholder="e.g., Baneshwor, Kathmandu" />
+                                <button class="btn btn-outline-secondary" type="button" id="btnSearchMap">
+                                    <i class="bi bi-search"></i> Find
+                                </button>
+                                <button class="btn btn-outline-primary" type="button" id="btnMyLocation">
+                                    <i class="bi bi-crosshair"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <input type="hidden" asp-for="Latitude" id="Latitude" />
+                        <input type="hidden" asp-for="Longitude" id="Longitude" />
+                        
+                        <div id="requestMap" class="rounded border mb-4" style="height: 300px;"></div>
+
+                        <div class="text-end mt-4">
+                            <a asp-controller="Customer" asp-action="Dashboard" class="btn btn-light me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">Post Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/maps.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mapService = new LeafletMapService("requestMap", { zoom: 13 });
+            
+            setTimeout(() => {
+                mapService.init();
+                if (mapService.map) mapService.map.invalidateSize();
+
+                mapService.enableClickToPick((lat, lng) => {
+                    document.getElementById("Latitude").value = lat;
+                    document.getElementById("Longitude").value = lng;
+                });
+
+                document.getElementById("btnMyLocation").onclick = () => {
+                    mapService.getCurrentLocation((pos) => {
+                        document.getElementById("Latitude").value = pos.lat;
+                        document.getElementById("Longitude").value = pos.lng;
+                        document.getElementById("Address").value = "My Current Location";
+                    });
+                };
+
+                document.getElementById("btnSearchMap").onclick = () => {
+                    const query = document.getElementById("Address").value;
+                    if (query) {
+                        mapService.searchLocation(query, (result) => {
+                            document.getElementById("Latitude").value = result.lat;
+                            document.getElementById("Longitude").value = result.lng;
+                        });
+                    }
+                };
+            }, 500);
+        });
+    </script>
+}

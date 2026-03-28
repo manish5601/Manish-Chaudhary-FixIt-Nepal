@@ -32,6 +32,7 @@ namespace FixItNepal.Controllers
                 .Include(b => b.ServiceProvider)
                 .ThenInclude(p => p.User)
                 .Include(b => b.ServiceItem)
+                .Include(b => b.ServiceRequest)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null) return NotFound();
@@ -47,7 +48,7 @@ namespace FixItNepal.Controllers
                 BookingId = bookingId,
                 ServiceProviderId = booking.ServiceProviderId,
                 ServiceProviderName = booking.ServiceProvider.User.FullName,
-                ServiceName = booking.ServiceItem.Name
+                ServiceName = booking.ServiceItem?.Name ?? booking.ServiceRequest?.Title ?? "Custom Service"
             };
 
             return View(model);

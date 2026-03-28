@@ -53,6 +53,7 @@ namespace FixItNepal.Controllers
                     .Include(b => b.Customer).ThenInclude(c => c.User)
                     .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
                     .Include(b => b.ServiceItem)
+                    .Include(b => b.ServiceRequest)
                     .FirstOrDefaultAsync(b => b.Id == bookingId);
 
                 if (booking != null && booking.Status == BookingStatus.PaymentPending)
@@ -65,15 +66,16 @@ namespace FixItNepal.Controllers
 
                     _context.Update(booking);
                     
-                    // --- Notification logic moved here from BookingController ---
+                    // --- Notification logic ---
                     var providerUser = booking.ServiceProvider.User;
                     if (providerUser != null)
                     {
+                        string serviceName = booking.ServiceItem?.Name ?? booking.ServiceRequest?.Title ?? "Custom Service";
                         var notif = new Notification
                         {
                             UserId = providerUser.Id,
                             Title = "New Booking Order - Paid",
-                            Message = $"New booking for {booking.ServiceItem.Name}. Token paid. Reply within 24 hours.",
+                            Message = $"New booking for {serviceName}. Token paid. Reply within 24 hours.",
                             Type = NotificationType.System,
                             IsRead = false,
                             CreatedAt = DateTime.UtcNow,
@@ -83,7 +85,7 @@ namespace FixItNepal.Controllers
                         _context.Notifications.Add(notif);
 
                         // Send Email to Provider
-                        var subject = $"New Booking Request: {booking.ServiceItem.Name} - FixIt Nepal";
+                        var subject = $"New Booking Request: {serviceName} - FixIt Nepal";
                         var body = $@"
                             <div style='font-family: sans-serif; color: #333;'>
                                 <h2 style='color: #0d6efd;'>New Paid Booking Request</h2>
