@@ -153,7 +153,8 @@
 
             try {
                 const response = await fetch(`/api/chatapi/history/${targetUserId}?bookingId=${bookingId || ''}`);
-                const history = await response.json();
+                const result = await response.json();
+                const history = result.data || [];
                 
                 messagesContainer.innerHTML = '';
                 history.forEach(msg => {
@@ -172,7 +173,8 @@
         async function loadConversations() {
             try {
                 const response = await fetch('/api/chatapi/conversations');
-                const conversations = await response.json();
+                const result = await response.json();
+                const conversations = result.data || [];
 
                 conversationsList.innerHTML = '';
                 if (conversations.length === 0) {
