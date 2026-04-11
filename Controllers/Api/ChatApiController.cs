@@ -23,7 +23,7 @@ namespace FixItNepal.Controllers.Api
         public async Task<IActionResult> GetChatHistory(string otherUserId, [FromQuery] int? bookingId = null)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized();
+            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized"));
 
             var query = _context.ChatMessages
                 .Where(m => (m.SenderId == currentUserId && m.ReceiverId == otherUserId) ||
@@ -48,26 +48,26 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            return Ok(history);
+            return Ok(ApiResponse<object>.SuccessResponse(history, "Chat history retrieved successfully"));
         }
 
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized();
+            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized"));
 
             var count = await _context.ChatMessages
                 .CountAsync(m => m.ReceiverId == currentUserId && !m.IsRead);
 
-            return Ok(new { count });
+            return Ok(ApiResponse<object>.SuccessResponse(new { count }, "Unread message count retrieved successfully"));
         }
 
         [HttpPost("mark-read/{otherUserId}")]
         public async Task<IActionResult> MarkAsRead(string otherUserId)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized();
+            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized"));
 
             var messages = await _context.ChatMessages
                 .Where(m => m.ReceiverId == currentUserId && m.SenderId == otherUserId && !m.IsRead)
@@ -79,14 +79,14 @@ namespace FixItNepal.Controllers.Api
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { success = true });
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Messages marked as read"));
         }
 
         [HttpGet("conversations")]
         public async Task<IActionResult> GetConversations()
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized();
+            if (string.IsNullOrEmpty(currentUserId)) return Unauthorized(ApiResponse<object>.ErrorResponse("Unauthorized"));
 
             // Get unique users the current user has chatted with
             var sentTo = await _context.ChatMessages
@@ -129,7 +129,7 @@ namespace FixItNepal.Controllers.Api
                 .OrderByDescending(c => c.LastTimestamp)
                 .ToListAsync();
 
-            return Ok(conversations);
+            return Ok(ApiResponse<object>.SuccessResponse(conversations, "Conversations retrieved successfully"));
         }
     }
 }

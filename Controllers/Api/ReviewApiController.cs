@@ -35,23 +35,23 @@ namespace FixItNepal.Controllers.Api
             var userId = _userManager.GetUserId(User);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (customer == null) return BadRequest("Only customers can leave reviews.");
+            if (customer == null) return BadRequest(ApiResponse<object>.ErrorResponse("Only customers can leave reviews."));
 
             var booking = await _context.Bookings
                 .Include(b => b.ServiceProvider).ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(b => b.Id == model.BookingId);
 
-            if (booking == null) return NotFound("Booking not found.");
+            if (booking == null) return NotFound(ApiResponse<object>.ErrorResponse("Booking not found."));
 
-            if (booking.CustomerId != customer.Id) return Forbid("You can only review your own bookings.");
+            if (booking.CustomerId != customer.Id) return Forbid();
 
             if (booking.Status != BookingStatus.Completed)
-                return BadRequest("You can only review completed bookings.");
+                return BadRequest(ApiResponse<object>.ErrorResponse("You can only review completed bookings."));
 
             // Check if review already exists
             var existingReview = await _context.Reviews.AnyAsync(r => r.BookingId == model.BookingId);
-            if (existingReview) return BadRequest("This booking has already been reviewed.");
-
+            if (existingReview) return BadRequest(ApiResponse<object>.ErrorResponse("This booking has already been reviewed."));
+            
             var review = new Review
             {
                 BookingId = model.BookingId,
@@ -115,7 +115,7 @@ namespace FixItNepal.Controllers.Api
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Review submitted successfully", reviewId = review.Id });
+            return Ok(ApiResponse<object>.SuccessResponse(new { reviewId = review.Id }, "Review submitted successfully"));
         }
 
         // GET: api/ReviewApi/provider/{providerId}
@@ -126,7 +126,7 @@ namespace FixItNepal.Controllers.Api
             var provider = await _context.ServiceProviders.FindAsync(providerId);
             if (provider == null)
             {
-                return NotFound(new { message = "Provider not found" });
+                return NotFound(ApiResponse<object>.ErrorResponse("Provider not found"));
             }
 
             var reviews = await _context.Reviews
@@ -144,12 +144,7 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            if (!reviews.Any())
-            {
-                return Ok(new { message = "No reviews found for this provider", reviews = new List<object>() });
-            }
-
-            return Ok(reviews);
+            return Ok(ApiResponse<object>.SuccessResponse(reviews, "Provider reviews retrieved successfully"));
         }
 
         // POST: api/ReviewApi/flag/{id}
@@ -157,14 +152,15 @@ namespace FixItNepal.Controllers.Api
         public async Task<IActionResult> FlagReview(int id, [FromBody] string reason)
         {
             var review = await _context.Reviews.FindAsync(id);
-            if (review == null) return NotFound();
+            if (review == null) return NotFound(ApiResponse<object>.ErrorResponse("Review not found"));
 
+            var userName = User.Identity?.Name ?? "Unknown User";
             review.IsFlagged = true;
-            review.AdminNote = $"Flagged by user. Reason: {reason}";
+            review.AdminNote = $"Flagged by {userName}. Reason: {reason}";
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Review flagged for moderation." });
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Review flagged for moderation"));
         }
     }
 }

@@ -81,6 +81,9 @@ namespace FixItNepal.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
+            _context.Disputes.Add(dispute);
+            await _context.SaveChangesAsync();
+
             // Notify other party
             var isCustomer = booking.Customer.UserId == userId;
             var targetUserId = isCustomer ? booking.ServiceProvider.UserId : booking.Customer.UserId;
@@ -122,8 +125,24 @@ namespace FixItNepal.Controllers
                     </div>
                 ";
                 await _emailService.SendEmailAsync(targetUser.Email, subject, body);
-                await _context.SaveChangesAsync();
             }
+
+            // Notify Admin
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            foreach (var admin in admins)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = admin.Id,
+                    Title = "New Dispute Raised",
+                    Message = $"A dispute has been raised for Booking #{booking.Id} by {User.Identity?.Name}.",
+                    RelatedEntityId = dispute.Id,
+                    RelatedEntityType = "Dispute",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            
+            await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Dispute raised successfully. Our support team will review it.";
             return RedirectToAction("Details", "Booking", new { id = model.BookingId });
@@ -134,9 +153,10 @@ namespace FixItNepal.Controllers
         {
             var userId = _userManager.GetUserId(User);
             var disputes = await _context.Disputes
-                .Include(d => d.Booking)
-                .ThenInclude(b => b.ServiceItem)
-                .Where(d => d.RaisedById == userId)
+                .Include(d => d.Booking).ThenInclude(b => b.ServiceItem)
+                .Include(d => d.Booking).ThenInclude(b => b.Customer)
+                .Include(d => d.Booking).ThenInclude(b => b.ServiceProvider)
+                .Where(d => d.RaisedById == userId || d.Booking.Customer.UserId == userId || d.Booking.ServiceProvider.UserId == userId)
                 .OrderByDescending(d => d.CreatedAt)
                 .ToListAsync();
 

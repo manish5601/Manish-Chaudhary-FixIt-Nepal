@@ -27,11 +27,13 @@ namespace FixItNepal.Controllers.Api
             var userId = _userManager.GetUserId(User);
             var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == userId);
             
-            if (provider == null) return NotFound("Provider profile not found.");
+            if (provider == null) return NotFound(ApiResponse<object>.ErrorResponse("Provider profile not found"));
 
-            return await _context.ProviderAvailabilities
+            var availability = await _context.ProviderAvailabilities
                 .Where(a => a.ServiceProviderId == provider.Id)
                 .ToListAsync();
+            
+            return Ok(ApiResponse<object>.SuccessResponse(availability, "Provider availability retrieved successfully"));
         }
 
         [HttpPost]
@@ -40,7 +42,7 @@ namespace FixItNepal.Controllers.Api
             var userId = _userManager.GetUserId(User);
             var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == userId);
 
-            if (provider == null) return NotFound("Provider profile not found.");
+            if (provider == null) return NotFound(ApiResponse<object>.ErrorResponse("Provider profile not found"));
 
             availability.ServiceProviderId = provider.Id;
 
@@ -61,7 +63,7 @@ namespace FixItNepal.Controllers.Api
 
             await _context.SaveChangesAsync();
 
-            return Ok(availability);
+            return Ok(ApiResponse<object>.SuccessResponse(availability, "Provider availability updated successfully"));
         }
     }
 }

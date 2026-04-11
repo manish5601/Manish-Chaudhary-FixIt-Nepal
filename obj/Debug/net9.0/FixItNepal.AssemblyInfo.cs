@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FixItNepal")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3bcc16dfc3d28748891e79141b8b0bf5e2704b46")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a5bc7b5ca114b9a44d60f3fed6e835127ea6e55")]
 [assembly: System.Reflection.AssemblyProductAttribute("FixItNepal")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FixItNepal")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

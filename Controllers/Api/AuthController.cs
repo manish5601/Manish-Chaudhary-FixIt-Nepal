@@ -59,13 +59,13 @@ namespace FixItNepal.Controllers.Api
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
 
-                return Ok(new
+                return Ok(ApiResponse<object>.SuccessResponse(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
                     expiration = token.ValidTo
-                });
+                }, "Login successful"));
             }
-            return Unauthorized();
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid email or password"));
         }
 
         [HttpPost("register-customer")]
@@ -77,7 +77,7 @@ namespace FixItNepal.Controllers.Api
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                return BadRequest(new { message = "User already exists" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("User already exists"));
             }
 
             // Profile Picture Logic (Simplified for API - expecting file or handling null)
@@ -122,10 +122,10 @@ namespace FixItNepal.Controllers.Api
                 _context.Customers.Add(customer);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "User registered successfully" });
+                return Ok(ApiResponse<object>.SuccessResponse(null, "User registered successfully"));
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(ApiResponse<object>.ErrorResponse(string.Join(", ", result.Errors.Select(e => e.Description))));
         }
 
         [HttpPost("register-provider")]
@@ -137,7 +137,7 @@ namespace FixItNepal.Controllers.Api
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                return BadRequest(new { message = "User already exists" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("User already exists"));
             }
 
             // Profile Picture Logic
@@ -215,10 +215,10 @@ namespace FixItNepal.Controllers.Api
                     await _context.SaveChangesAsync();
                 }
 
-                return Ok(new { message = "Provider registered successfully, pending verification" });
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Provider registered successfully, pending verification"));
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(ApiResponse<object>.ErrorResponse(string.Join(", ", result.Errors.Select(e => e.Description))));
         }
     }
 }

@@ -21,43 +21,44 @@ namespace FixItNepal.Controllers.Api
         // GET: api/ServiceCategories
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<ServiceCategory>>> GetServiceCategories()
+        public async Task<IActionResult> GetServiceCategories()
         {
-            return await _context.ServiceCategories.ToListAsync();
+            var categories = await _context.ServiceCategories.ToListAsync();
+            return Ok(ApiResponse<object>.SuccessResponse(categories, "Service categories retrieved successfully"));
         }
 
         // GET: api/ServiceCategories/5
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<ActionResult<ServiceCategory>> GetServiceCategory(int id)
+        public async Task<IActionResult> GetServiceCategory(int id)
         {
             var serviceCategory = await _context.ServiceCategories.FindAsync(id);
 
             if (serviceCategory == null)
             {
-                return NotFound();
+                return NotFound(ApiResponse<object>.ErrorResponse("Service category not found"));
             }
 
-            return serviceCategory;
+            return Ok(ApiResponse<object>.SuccessResponse(serviceCategory, "Service category retrieved successfully"));
         }
 
         // POST: api/ServiceCategories
         [HttpPost]
         [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")] // Restrict creation to Admins and use JWT
-        public async Task<ActionResult<ServiceCategory>> PostServiceCategory(ServiceCategory serviceCategory)
+        public async Task<IActionResult> PostServiceCategory(ServiceCategory serviceCategory)
         {
             // Remove Id from ModelState if it's there, as it's auto-generated
             ModelState.Remove(nameof(ServiceCategory.Id));
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ApiResponse<object>.ErrorResponse(string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
             }
 
             _context.ServiceCategories.Add(serviceCategory);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetServiceCategory", new { id = serviceCategory.Id }, serviceCategory);
+            return Ok(ApiResponse<object>.SuccessResponse(serviceCategory, "Service category created successfully"));
         }
 
         // PUT: api/ServiceCategories/5
@@ -67,12 +68,12 @@ namespace FixItNepal.Controllers.Api
         {
             if (id != serviceCategory.Id)
             {
-                return BadRequest("ID mismatch");
+                return BadRequest(ApiResponse<object>.ErrorResponse("ID mismatch"));
             }
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ApiResponse<object>.ErrorResponse(string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
             }
 
             _context.Entry(serviceCategory).State = EntityState.Modified;
@@ -85,7 +86,7 @@ namespace FixItNepal.Controllers.Api
             {
                 if (!ServiceCategoryExists(id))
                 {
-                    return NotFound();
+                    return NotFound(ApiResponse<object>.ErrorResponse("Service category not found"));
                 }
                 else
                 {
@@ -93,7 +94,7 @@ namespace FixItNepal.Controllers.Api
                 }
             }
 
-            return Ok(new { message = "Service Category updated successfully", category = serviceCategory });
+            return Ok(ApiResponse<object>.SuccessResponse(serviceCategory, "Service category updated successfully"));
         }
 
         // DELETE: api/ServiceCategories/5
@@ -104,13 +105,13 @@ namespace FixItNepal.Controllers.Api
             var serviceCategory = await _context.ServiceCategories.FindAsync(id);
             if (serviceCategory == null)
             {
-                return NotFound();
+                return NotFound(ApiResponse<object>.ErrorResponse("Service category not found"));
             }
 
             _context.ServiceCategories.Remove(serviceCategory);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Service Category deleted successfully" });
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Service Category deleted successfully"));
         }
 
         private bool ServiceCategoryExists(int id)

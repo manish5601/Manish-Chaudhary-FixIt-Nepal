@@ -43,7 +43,7 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            return Ok(pendingProviders);
+            return Ok(ApiResponse<object>.SuccessResponse(pendingProviders, "Pending providers retrieved successfully"));
         }
 
         // POST: api/adminapi/providers/verify/5
@@ -54,18 +54,18 @@ namespace FixItNepal.Controllers.Api
 
             if (provider == null)
             {
-                return NotFound(new { message = "Provider not found" });
+                return NotFound(ApiResponse<object>.ErrorResponse("Provider not found"));
             }
 
             if (provider.Status == VerificationStatus.Approved)
             {
-                return BadRequest(new { message = "Provider is already verified" });
+                return BadRequest(ApiResponse<object>.ErrorResponse("Provider is already verified"));
             }
 
             provider.Status = VerificationStatus.Approved;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Provider verified successfully", providerId = provider.Id });
+            return Ok(ApiResponse<object>.SuccessResponse(new { providerId = provider.Id }, "Provider verified successfully"));
         }
 
         // POST: api/adminapi/reviews/dismiss/5
@@ -73,13 +73,13 @@ namespace FixItNepal.Controllers.Api
         public async Task<IActionResult> DismissReviewFlag(int id)
         {
             var review = await _context.Reviews.FindAsync(id);
-            if (review == null) return NotFound(new { message = "Review not found" });
+            if (review == null) return NotFound(ApiResponse<object>.ErrorResponse("Review not found"));
 
             review.IsFlagged = false;
             review.AdminNote = "Flag dismissed via API.";
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Review flag dismissed." });
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Review flag dismissed"));
         }
 
         // DELETE: api/adminapi/reviews/5
@@ -87,7 +87,7 @@ namespace FixItNepal.Controllers.Api
         public async Task<IActionResult> DeleteReview(int id)
         {
             var review = await _context.Reviews.FindAsync(id);
-            if (review == null) return NotFound(new { message = "Review not found" });
+            if (review == null) return NotFound(ApiResponse<object>.ErrorResponse("Review not found"));
 
             var providerId = review.ServiceProviderId;
             _context.Reviews.Remove(review);
@@ -111,7 +111,7 @@ namespace FixItNepal.Controllers.Api
                 await _context.SaveChangesAsync();
             }
 
-            return Ok(new { message = "Review deleted successfully." });
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Review deleted successfully"));
         }
         // GET: api/adminapi/reviews/flagged
         [HttpGet("reviews/flagged")]
@@ -134,7 +134,7 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            return Ok(flaggedReviews);
+            return Ok(ApiResponse<object>.SuccessResponse(flaggedReviews, "Flagged reviews retrieved successfully"));
         }
 
         // GET: api/adminapi/disputes
@@ -156,7 +156,7 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            return Ok(disputes);
+            return Ok(ApiResponse<object>.SuccessResponse(disputes, "Disputes retrieved successfully"));
         }
 
         // POST: api/adminapi/disputes/resolve/{id}
@@ -167,7 +167,7 @@ namespace FixItNepal.Controllers.Api
                 .Include(d => d.Booking)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
-            if (dispute == null) return NotFound(new { message = "Dispute not found" });
+            if (dispute == null) return NotFound(ApiResponse<object>.ErrorResponse("Dispute not found"));
 
             dispute.Status = model.Status;
             dispute.Resolution = model.Resolution;
@@ -185,7 +185,7 @@ namespace FixItNepal.Controllers.Api
             });
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Dispute resolved successfully", status = dispute.Status.ToString() });
+            return Ok(ApiResponse<object>.SuccessResponse(new { status = dispute.Status.ToString() }, "Dispute resolved successfully"));
         }
     }
 

@@ -60,7 +60,12 @@
         </div>
 
         <div class="card border-0 shadow-lg overflow-hidden">
-            <div id="homeMap" style="height: 500px; width: 100%;"></div>
+            <div id="homeMap" style="height: 500px; width: 100%; position: relative; background-color: #f1f5f9;">
+                <!-- Fallback content if JS is disabled or fails to run -->
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <p class="text-muted"><i class="bi bi-geo-alt me-2"></i>Map is loading...</p>
+                </div>
+            </div>
              <div class="card-footer bg-white border-0 py-3 text-center">
                 <button id="useMyLocation" class="btn btn-outline-primary rounded-pill">
                     <i class="bi bi-crosshair me-2"></i>Use My Location
@@ -143,7 +148,7 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/maps.js"></script>
+    <script src="~/js/maps.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             console.log("FIXITNEPAL: Scripts loading...");
@@ -219,14 +224,12 @@
 
             // Change listeners removed as filters are gone
 
-            // Initialize Map with 500ms delay to ensure container is ready
+            // Initialize Map with short delay to ensure container is ready
             setTimeout(() => {
-                console.log("FIXITNEPAL: Initializing map...");
+                console.log("FIXITNEPAL: Starting map initialization sequence...");
                 mapService.init();
                 
                 if (mapService.map) {
-                    mapService.map.invalidateSize();
-                    
                     mapService.enableClickToPick((lat, lng) => {
                         console.log("FIXITNEPAL: Map clicked at", lat, lng);
                         currentLat = lat;
@@ -234,11 +237,14 @@
                         input.value = `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                         loadWithFilters();
                     });
+                    
+                    console.log("FIXITNEPAL: Running initial provider load");
+                    mapService.loadProviders('/api/Maps/providers');
+                } else {
+                    console.error("FIXITNEPAL: Map failed to initialize. Retrying in 1s...");
+                    setTimeout(() => mapService.init(), 1000);
                 }
-
-                console.log("FIXITNEPAL: Running initial provider load");
-                mapService.loadProviders('/api/Maps/providers');
-            }, 600);
+            }, 500);
         });
     </script>
 }

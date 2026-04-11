@@ -24,7 +24,7 @@ namespace FixItNepal.Controllers.Api
                                  .Where(c => c.IsActive)
                                  .Select(c => new { c.Id, c.Name })
                                  .ToListAsync();
-            return Ok(categories);
+            return Ok(ApiResponse<object>.SuccessResponse(categories, "Service categories retrieved successfully"));
         }
 
         // GET: api/services/providers
@@ -47,7 +47,7 @@ namespace FixItNepal.Controllers.Api
                 })
                 .ToListAsync();
 
-            return Ok(providers);
+            return Ok(ApiResponse<object>.SuccessResponse(providers, "Service providers retrieved successfully"));
         }
         // GET: api/services/items
         [HttpGet("items")]
@@ -57,7 +57,7 @@ namespace FixItNepal.Controllers.Api
                                  .Where(i => i.IsActive)
                                  .Select(i => new { i.Id, i.Name, i.Description, i.BasePrice, Category = i.ServiceCategory.Name })
                                  .ToListAsync();
-            return Ok(items);
+            return Ok(ApiResponse<object>.SuccessResponse(items, "Service items retrieved successfully"));
         }
     }
 }

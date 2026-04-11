@@ -16,4 +16,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="FixIt.Tests\**" />
+    <Content Remove="FixIt.Tests\**" />
+    <EmbeddedResource Remove="FixIt.Tests\**" />
+    <None Remove="FixIt.Tests\**" />
+  </ItemGroup>
+
+
 </Project>

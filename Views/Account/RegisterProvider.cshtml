@@ -116,7 +116,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/maps.js"></script>
+    <script src="~/js/maps.js" asp-append-version="true"></script>
     <script>
         // Profile photo preview
         document.getElementById('providerProfileImageInput').addEventListener('change', function (e) {
@@ -166,39 +166,40 @@
             const mapContainer = document.createElement("div");
             mapContainer.id = "regMap";
             mapContainer.style.height = "250px";
+            mapContainer.style.position = "relative"; // Fix: Map container needs position: relative
             mapContainer.className = "rounded-3 shadow-sm mb-3 mt-2";
             addressInput.parentNode.appendChild(mapContainer);
 
             const mapService = new LeafletMapService("regMap", { zoom: 12 });
             
             setTimeout(() => {
+                console.log("FIXITNEPAL: Initializing RegisterProvider map...");
                 mapService.init();
 
                 if (mapService.map) {
-                    mapService.map.invalidateSize();
+                    searchBtn.onclick = () => {
+                        const query = addressInput.value;
+                        if (query) {
+                            mapService.searchLocation(query, (result) => {
+                                latInput.value = result.lat;
+                                lngInput.value = result.lng;
+                            });
+                        }
+                    };
+
+                    mapService.enableClickToPick((lat, lng) => {
+                        latInput.value = lat;
+                        lngInput.value = lng;
+                    });
+
+                    // Try to get current location initially
+                    mapService.getCurrentLocation((pos) => {
+                        latInput.value = pos.lat;
+                        lngInput.value = pos.lng;
+                    });
+                } else {
+                    console.error("FIXITNEPAL: Registration map failed to initialize.");
                 }
-
-                searchBtn.onclick = () => {
-                    const query = addressInput.value;
-                    if (query) {
-                        mapService.searchLocation(query, (result) => {
-                            latInput.value = result.lat;
-                            lngInput.value = result.lng;
-                        });
-                    }
-                };
-
-                // Attach listeners AFTER map is initialized
-                mapService.enableClickToPick((lat, lng) => {
-                    latInput.value = lat;
-                    lngInput.value = lng;
-                });
-
-                // Try to get current location initially
-                mapService.getCurrentLocation((pos) => {
-                    latInput.value = pos.lat;
-                    lngInput.value = pos.lng;
-                });
             }, 500);
         });
     </script>

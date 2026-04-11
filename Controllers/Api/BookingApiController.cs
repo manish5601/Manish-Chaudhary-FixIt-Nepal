@@ -49,11 +49,11 @@ namespace FixItNepal.Controllers.Api
                 };
             }
 
-            return Ok(new { bookings, availability });
+            return Ok(ApiResponse<object>.SuccessResponse(new { bookings, availability }, "Booked slots retrieved successfully"));
         }
 
-        // GET: api/BookingApi
-        [HttpGet]
+        // GET: api/BookingApi/my-bookings
+        [HttpGet("my-bookings")]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
             var userId = _userManager.GetUserId(User);
@@ -68,7 +68,7 @@ namespace FixItNepal.Controllers.Api
                     .Where(b => b.ServiceProvider.UserId == userId)
                     .OrderByDescending(b => b.BookingDate)
                     .ToListAsync();
-                 return Ok(bookings);
+                 return Ok(ApiResponse<object>.SuccessResponse(bookings, "Provider bookings retrieved successfully"));
             }
             else
             {
@@ -79,7 +79,7 @@ namespace FixItNepal.Controllers.Api
                     .Where(b => b.Customer.UserId == userId)
                     .OrderByDescending(b => b.BookingDate)
                     .ToListAsync();
-                return Ok(bookings);
+                return Ok(ApiResponse<object>.SuccessResponse(bookings, "Customer bookings retrieved successfully"));
             }
         }
 
@@ -94,7 +94,7 @@ namespace FixItNepal.Controllers.Api
                  .Include(b => b.ServiceItem)
                  .FirstOrDefaultAsync(b => b.Id == id);
 
-            if (booking == null) return NotFound(new { message = "Booking not found" });
+            if (booking == null) return NotFound(ApiResponse<object>.ErrorResponse("Booking not found"));
 
             // Authorization check
             if (booking.Customer.UserId != userId && booking.ServiceProvider.UserId != userId)
@@ -102,7 +102,7 @@ namespace FixItNepal.Controllers.Api
                 return Forbid();
             }
 
-            return Ok(booking);
+            return Ok(ApiResponse<object>.SuccessResponse(booking, "Booking details retrieved successfully"));
         }
 
         // POST: api/BookingApi
@@ -114,13 +114,13 @@ namespace FixItNepal.Controllers.Api
 
             if (customer == null)
             {
-                return BadRequest("User is not a registered customer.");
+                return BadRequest(ApiResponse<object>.ErrorResponse("User is not a registered customer."));
             }
 
             // prevent booking if provider is not available or conflict exists
             // 1. Check if provider exists
             var serviceProvider = await _context.ServiceProviders.FindAsync(bookingDto.ServiceProviderId);
-            if (serviceProvider == null) return NotFound("Provider not found.");
+            if (serviceProvider == null) return NotFound(ApiResponse<object>.ErrorResponse("Provider not found."));
 
             // 2. Check overlap
             // Use range for date comparison to be safe against time components
@@ -142,7 +142,7 @@ namespace FixItNepal.Controllers.Api
             if (hasConflict)
             {
                 Console.WriteLine("[DEBUG] CONFLICT DETECTED!");
-                return Conflict(new { message = "The selected time slot is already booked." });
+                return Conflict(ApiResponse<object>.ErrorResponse("The selected time slot is already booked."));
             }
             else 
             {
@@ -168,17 +168,17 @@ namespace FixItNepal.Controllers.Api
             {
                 if (availability.IsDayOff)
                 {
-                    return BadRequest("Provider is not available on this day.");
+                    return BadRequest(ApiResponse<object>.ErrorResponse("Provider is not available on this day."));
                 }
                 if (bookingDto.StartTime < availability.StartTime || bookingDto.EndTime > availability.EndTime)
                 {
-                    return BadRequest($"Provider is only available between {availability.StartTime} and {availability.EndTime}.");
+                    return BadRequest(ApiResponse<object>.ErrorResponse($"Provider is only available between {availability.StartTime} and {availability.EndTime}."));
                 }
             }
 
 
             var serviceItem = await _context.ServiceItems.FindAsync(bookingDto.ServiceItemId);
-            if (serviceItem == null) return NotFound("Service not found.");
+            if (serviceItem == null) return NotFound(ApiResponse<object>.ErrorResponse("Service not found."));
 
             var booking = new Booking
             {
@@ -227,7 +227,7 @@ namespace FixItNepal.Controllers.Api
                 await _emailService.SendEmailAsync(providerUser.Email, subject, body);
             }
 
-            return CreatedAtAction("GetBookings", new { id = booking.Id }, booking);
+            return Ok(ApiResponse<object>.SuccessResponse(booking, "Booking created successfully"));
         }
 
         // PUT: api/BookingApi/5/status
@@ -240,7 +240,7 @@ namespace FixItNepal.Controllers.Api
                  .Include(b => b.Customer)
                  .FirstOrDefaultAsync(b => b.Id == id);
 
-             if (booking == null) return NotFound(new { message = "Booking not found" });
+             if (booking == null) return NotFound(ApiResponse<object>.ErrorResponse("Booking not found"));
 
              // Only provider can accept/reject/complete
              // Customer can cancel
@@ -308,7 +308,7 @@ namespace FixItNepal.Controllers.Api
                   await _emailService.SendEmailAsync(customerUser.Email, subject, body);
               }
 
-              return Ok(new { message = "Booking status updated successfully", newStatus = booking.Status.ToString() });
+              return Ok(ApiResponse<object>.SuccessResponse(new { newStatus = booking.Status.ToString() }, "Booking status updated successfully"));
         }
     }
 

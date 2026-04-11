@@ -34,12 +34,12 @@ namespace FixItNepal.Controllers.Api
                 .Include(b => b.ServiceProvider)
                 .FirstOrDefaultAsync(b => b.Id == model.BookingId);
 
-            if (booking == null) return NotFound(new { message = "Booking not found." });
+            if (booking == null) return NotFound(ApiResponse<object>.ErrorResponse("Booking not found."));
 
             // Authorization: Only Customer or Provider involved in the booking can raise a dispute
             if (booking.Customer.UserId != userId && booking.ServiceProvider.UserId != userId)
             {
-                return Forbid("You are not authorized to raise a dispute for this booking.");
+                return Forbid();
             }
 
             var dispute = new Dispute
@@ -53,6 +53,7 @@ namespace FixItNepal.Controllers.Api
             };
 
             _context.Disputes.Add(dispute);
+            await _context.SaveChangesAsync();
 
             // Notify Admin
             // In a real app, we'd notify all admins or a specific role
@@ -71,26 +72,21 @@ namespace FixItNepal.Controllers.Api
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Dispute raised successfully", disputeId = dispute.Id });
+            return Ok(ApiResponse<object>.SuccessResponse(new { disputeId = dispute.Id }, "Dispute raised successfully"));
         }
 
-        // GET: api/DisputeApi/my-disputes
         [HttpGet("my-disputes")]
         public async Task<IActionResult> GetMyDisputes()
         {
             var userId = _userManager.GetUserId(User);
             var disputes = await _context.Disputes
-                .Include(d => d.Booking)
-                .Where(d => d.RaisedById == userId)
+                .Include(d => d.Booking).ThenInclude(b => b.Customer)
+                .Include(d => d.Booking).ThenInclude(b => b.ServiceProvider)
+                .Where(d => d.RaisedById == userId || d.Booking.Customer.UserId == userId || d.Booking.ServiceProvider.UserId == userId)
                 .OrderByDescending(d => d.CreatedAt)
                 .ToListAsync();
 
-            if (!disputes.Any())
-            {
-                return Ok(new { message = "No disputes found", disputes = new List<object>() });
-            }
-
-            return Ok(disputes);
+            return Ok(ApiResponse<object>.SuccessResponse(disputes, "Your disputes retrieved successfully"));
         }
     }
 }

@@ -56,7 +56,7 @@ namespace FixItNepal.Controllers.Api
                 providers = providers.Where(p => CalculateDistance(lat.Value, lng.Value, p.Lat, p.Lng) <= radius).ToList();
             }
 
-            return Ok(providers);
+            return Ok(ApiResponse<object>.SuccessResponse(providers, "Map providers retrieved successfully"));
         }
 
         private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
@@ -91,7 +91,7 @@ namespace FixItNepal.Controllers.Api
                     p.Address
                 })
                 .ToListAsync();
-            return Ok(providers);
+            return Ok(ApiResponse<object>.SuccessResponse(providers, "Debug: All providers retrieved successfully"));
         }
     }
 }

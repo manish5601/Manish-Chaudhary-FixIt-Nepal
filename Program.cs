@@ -5,6 +5,7 @@ using FixItNepal.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
@@ -46,7 +47,12 @@ builder.Services.AddAuthentication()
     };
 });
 
+
+
+
+
 builder.Services.AddControllersWithViews()
+
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
@@ -73,7 +79,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure middleware
+
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();

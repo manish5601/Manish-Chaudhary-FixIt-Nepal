@@ -30,7 +30,7 @@ namespace FixItNepal.Controllers.Api
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            return Ok(notifications);
+            return Ok(ApiResponse<object>.SuccessResponse(notifications, "Notifications retrieved successfully"));
         }
 
         [HttpPut("{id}/read")]
@@ -39,14 +39,14 @@ namespace FixItNepal.Controllers.Api
             var userId = _userManager.GetUserId(User);
             var notification = await _context.Notifications.FindAsync(id);
 
-            if (notification == null) return NotFound();
+            if (notification == null) return NotFound(ApiResponse<object>.ErrorResponse("Notification not found"));
 
             if (notification.UserId != userId) return Forbid();
 
             notification.IsRead = true;
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Notification marked as read"));
         }
     }
 }
