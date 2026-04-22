@@ -287,6 +287,11 @@ namespace FixItNepal.Controllers
             _context.Update(user);
             await _context.SaveChangesAsync();
 
+            if (!user.IsActive)
+            {
+                await _userManager.UpdateSecurityStampAsync(user);
+            }
+
             return RedirectToAction(nameof(UserManagement));
         }
 
@@ -300,15 +305,23 @@ namespace FixItNepal.Controllers
 
             if (user.Email == "admin@fixitnepal.com") return RedirectToAction(nameof(UserManagement));
 
-            // Remove relevant related entities manually if needed
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
-            if (customer != null) _context.Customers.Remove(customer);
+            try
+            {
+                // Remove relevant related entities manually if needed
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
+                if (customer != null) _context.Customers.Remove(customer);
 
-            var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == id);
-            if (provider != null) _context.ServiceProviders.Remove(provider);
+                var provider = await _context.ServiceProviders.FirstOrDefaultAsync(p => p.UserId == id);
+                if (provider != null) _context.ServiceProviders.Remove(provider);
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "User deleted successfully.";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["ErrorMessage"] = "Cannot delete this user because they have associated records (e.g., bookings, messages). Please deactivate the user instead.";
+            }
 
             return RedirectToAction(nameof(UserManagement));
         }
@@ -327,6 +340,20 @@ namespace FixItNepal.Controllers
                 .ToListAsync();
 
             return View(flaggedReviews);
+        }
+
+        // GET: /Admin/FlaggedReviewDetails/5
+        public async Task<IActionResult> FlaggedReviewDetails(int id)
+        {
+            var review = await _context.Reviews
+                .Include(r => r.Customer).ThenInclude(c => c.User)
+                .Include(r => r.ServiceProvider).ThenInclude(p => p.User)
+                .Include(r => r.Booking).ThenInclude(b => b.ServiceItem)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (review == null) return NotFound();
+
+            return View(review);
         }
 
         // POST: /Admin/DismissFlag/5

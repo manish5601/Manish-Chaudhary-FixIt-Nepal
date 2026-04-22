@@ -73,6 +73,7 @@ namespace FixItNepal.Controllers
 
                 _context.Add(serviceItem);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "New service added successfully.";
                 return RedirectToAction(nameof(Index));
             }
             // Repopulate categories if model state is invalid
@@ -150,6 +151,7 @@ namespace FixItNepal.Controllers
 
                     _context.Update(serviceItem);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Service updated successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -188,6 +190,7 @@ namespace FixItNepal.Controllers
             {
                 _context.ServiceItems.Remove(serviceItem);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Service deleted successfully.";
             }
             return RedirectToAction(nameof(Index));
         }

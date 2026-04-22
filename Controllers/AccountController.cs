@@ -269,11 +269,17 @@ namespace FixItNepal.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null && !user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact support.");
+                return View(model);
+            }
+
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user != null)
                 {
                     var roles = await _userManager.GetRolesAsync(user);

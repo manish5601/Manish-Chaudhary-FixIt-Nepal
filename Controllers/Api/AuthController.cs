@@ -33,6 +33,11 @@ namespace FixItNepal.Controllers.Api
                 return BadRequest(ModelState);
 
             var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null && !user.IsActive)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Your account has been deactivated. Please contact support."));
+            }
+
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 var userRoles = await _userManager.GetRolesAsync(user);
